@@ -125,6 +125,69 @@ INSERT INTO `customer` VALUES (1,'Muhila','123 Main St','Northern','Jaffna','Eng
 UNLOCK TABLES;
 
 --
+-- Table structure for table `dealerconsignmentnote`
+--
+
+DROP TABLE IF EXISTS `dealerconsignmentnote`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dealerconsignmentnote` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `dealerCode` varchar(255) NOT NULL,
+  `dealerName` varchar(255) NOT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `consignmentNoteNo` varchar(255) NOT NULL,
+  `date` date DEFAULT NULL,
+  `deliveryMode` varchar(255) DEFAULT NULL,
+  `vehicleNo` varchar(255) DEFAULT NULL,
+  `references` varchar(255) DEFAULT NULL,
+  `contactPerson` varchar(255) DEFAULT NULL,
+  `isActive` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `dealerconsignmentnote`
+--
+
+LOCK TABLES `dealerconsignmentnote` WRITE;
+/*!40000 ALTER TABLE `dealerconsignmentnote` DISABLE KEYS */;
+INSERT INTO `dealerconsignmentnote` VALUES (1,'DC001','ABC Motors','123 Main St','CN-2025-001','2025-02-23','By Road','MH-01-AB-1234','PO-123','John',1);
+/*!40000 ALTER TABLE `dealerconsignmentnote` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `dealerconsignmentnoteitem`
+--
+
+DROP TABLE IF EXISTS `dealerconsignmentnoteitem`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `dealerconsignmentnoteitem` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `noteId` int NOT NULL,
+  `modelId` int NOT NULL,
+  `itemCode` varchar(255) DEFAULT NULL,
+  `chassisNumber` varchar(255) DEFAULT NULL,
+  `motorNumber` varchar(255) DEFAULT NULL,
+  `color` varchar(255) DEFAULT NULL,
+  `quantity` int DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `dealerconsignmentnoteitem`
+--
+
+LOCK TABLES `dealerconsignmentnoteitem` WRITE;
+/*!40000 ALTER TABLE `dealerconsignmentnoteitem` DISABLE KEYS */;
+INSERT INTO `dealerconsignmentnoteitem` VALUES (1,1,1,'BIKE-001','CH123','MN456','Black',2);
+/*!40000 ALTER TABLE `dealerconsignmentnoteitem` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `lease`
 --
 
@@ -242,6 +305,34 @@ INSERT INTO `payment` VALUES (1,'Cash',1),(2,'Card',1),(3,'Cheque',1);
 UNLOCK TABLES;
 
 --
+-- Table structure for table `shopdetails`
+--
+
+DROP TABLE IF EXISTS `shopdetails`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `shopdetails` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `logo` varchar(255) DEFAULT NULL,
+  `address` varchar(255) DEFAULT NULL,
+  `phoneNumber` varchar(255) DEFAULT NULL,
+  `isActive` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `shopdetails`
+--
+
+LOCK TABLES `shopdetails` WRITE;
+/*!40000 ALTER TABLE `shopdetails` DISABLE KEYS */;
+INSERT INTO `shopdetails` VALUES (1,'AIMA','https://example.com/logo.png','123 Main St','+94112345678',1);
+/*!40000 ALTER TABLE `shopdetails` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `stock`
 --
 
@@ -270,7 +361,7 @@ CREATE TABLE `stock` (
 
 LOCK TABLES `stock` WRITE;
 /*!40000 ALTER TABLE `stock` DISABLE KEYS */;
-INSERT INTO `stock` VALUES (1,1,'Duke 200',NULL,'Black',50000,10,NULL,1),(2,1,'Duke 160',NULL,'Black',50000,10,NULL,1),(3,2,'Mt-15',NULL,'Black',50000,10,NULL,1),(4,2,'R15',NULL,'Black',50000,10,NULL,1);
+INSERT INTO `stock` VALUES (1,1,'Duke 200','Du200-Black','Black',50000,10,NULL,1),(2,1,'Duke 160','Du160-Black','Black',50000,10,NULL,1),(3,2,'Mt-15','Mt15-Black','Black',50000,10,NULL,1),(4,2,'R15','R15-Black','Black',50000,10,NULL,1);
 /*!40000 ALTER TABLE `stock` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -371,4 +462,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-22 22:35:20
+-- Dump completed on 2026-02-23  1:57:16
