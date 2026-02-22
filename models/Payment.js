@@ -1,15 +1,15 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-const Tax = sequelize.define('Tax', {
+const Payment = sequelize.define('Payment', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  taxPercentage: {
-    type: DataTypes.DOUBLE,
-    field: 'taxPercentage'
+  name: {
+    type: DataTypes.STRING,
+    field: 'name'
   },
   isActive: {
     type: DataTypes.BOOLEAN,
@@ -17,8 +17,8 @@ const Tax = sequelize.define('Tax', {
     field: 'isActive'
   }
 }, {
-  tableName: 'tax',
+  tableName: 'payment',
   timestamps: false
 });
 
-module.exports = Tax;
+module.exports = Payment;

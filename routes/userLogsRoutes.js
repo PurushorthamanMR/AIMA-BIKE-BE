@@ -24,7 +24,7 @@ router.get('/getAll', authenticateToken, async (req, res) => {
     const status = req.query.status !== undefined ? req.query.status === 'true' : undefined;
     
     const searchParams = {};
-    if (req.query.description) searchParams.description = req.query.description;
+    if (req.query.action) searchParams.action = req.query.action;
 
     const result = await userLogsService.getAllPageUserLogs(pageNumber, pageSize, status, searchParams);
     res.json(responseUtil.getServiceResponse(result));

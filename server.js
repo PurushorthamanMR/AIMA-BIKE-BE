@@ -20,17 +20,15 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 
 // Routes
 app.use('/user', require('./routes/userRoutes'));
-app.use('/product', require('./routes/productRoutes'));
-app.use('/transaction', require('./routes/transactionRoutes'));
-app.use('/customer', require('./routes/customerRoutes'));
-app.use('/productCategory', require('./routes/productCategoryRoutes'));
-app.use('/tax', require('./routes/taxRoutes'));
-app.use('/supplier', require('./routes/supplierRoutes'));
-app.use('/stock', require('./routes/stockRoutes'));
-app.use('/paymentMethod', require('./routes/paymentMethodRoutes'));
 app.use('/userRole', require('./routes/userRoleRoutes'));
-app.use('/auth', require('./routes/passwordResetRoutes'));
 app.use('/userLogs', require('./routes/userLogsRoutes'));
+app.use('/category', require('./routes/categoryRoutes'));
+app.use('/model', require('./routes/modelRoutes'));
+app.use('/stock', require('./routes/stockRoutes'));
+app.use('/payment', require('./routes/paymentRoutes'));
+app.use('/cash', require('./routes/cashRoutes'));
+app.use('/lease', require('./routes/leaseRoutes'));
+app.use('/customer', require('./routes/customerRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

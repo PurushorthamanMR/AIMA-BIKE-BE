@@ -12,15 +12,108 @@ const Customer = sequelize.define('Customer', {
     allowNull: false,
     field: 'name'
   },
-  mobileNumber: {
+  address: {
     type: DataTypes.STRING,
     allowNull: false,
-    field: 'mobileNumber'
+    field: 'address'
   },
-  createdDate: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-    field: 'createdDate'
+  province: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'province'
+  },
+  district: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'district'
+  },
+  occupation: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'occupation'
+  },
+  dateOfBirth: {
+    type: DataTypes.DATEONLY,
+    field: 'dateOfBirth'
+  },
+  religion: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'religion'
+  },
+  contactNumber: {
+    type: DataTypes.INTEGER,
+    field: 'contactNumber'
+  },
+  whatsappNumber: {
+    type: DataTypes.INTEGER,
+    field: 'whatsappNumber'
+  },
+  nic: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'nic'
+  },
+  modelId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'modelId'
+  },
+  chassisNumber: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'chassisNumber'
+  },
+  motorNumber: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'motorNumber'
+  },
+  colorOfVehicle: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'colorOfVehicle'
+  },
+  dateOfPurchase: {
+    type: DataTypes.DATEONLY,
+    field: 'dateOfPurchase'
+  },
+  loyalityCardNo: {
+    type: DataTypes.INTEGER,
+    field: 'loyalityCardNo'
+  },
+  dateOfDelivery: {
+    type: DataTypes.DATEONLY,
+    field: 'dateOfDelivery'
+  },
+  sellingAmount: {
+    type: DataTypes.DOUBLE,
+    field: 'sellingAmount'
+  },
+  registrationFees: {
+    type: DataTypes.DOUBLE,
+    field: 'registrationFees'
+  },
+  advancePaymentAmount: {
+    type: DataTypes.DOUBLE,
+    field: 'advancePaymentAmount'
+  },
+  advancePaymentDate: {
+    type: DataTypes.DATEONLY,
+    field: 'advancePaymentDate'
+  },
+  balancePaymentAmount: {
+    type: DataTypes.DOUBLE,
+    field: 'balancePaymentAmount'
+  },
+  balancePaymentDate: {
+    type: DataTypes.DATEONLY,
+    field: 'balancePaymentDate'
+  },
+  paymentId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'paymentId'
   },
   isActive: {
     type: DataTypes.BOOLEAN,

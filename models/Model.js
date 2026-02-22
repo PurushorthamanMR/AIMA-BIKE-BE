@@ -1,28 +1,34 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-const ProductCategory = sequelize.define('ProductCategory', {
+const Model = sequelize.define('Model', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  productCategoryName: {
+  categoryId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'categoryId'
+  },
+  name: {
     type: DataTypes.STRING,
-    field: 'productCategoryName'
+    allowNull: false,
+    field: 'name'
+  },
+  imageUrl: {
+    type: DataTypes.STRING,
+    field: 'imageUrl'
   },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     field: 'isActive'
-  },
-  agevalidation: {
-    type: DataTypes.BOOLEAN,
-    field: 'agevalidation'
   }
 }, {
-  tableName: 'productCategory',
+  tableName: 'model',
   timestamps: false
 });
 
-module.exports = ProductCategory;
+module.exports = Model;

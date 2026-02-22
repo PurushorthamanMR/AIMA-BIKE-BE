@@ -7,19 +7,37 @@ const Stock = sequelize.define('Stock', {
     primaryKey: true,
     autoIncrement: true
   },
+  modelId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+    field: 'modelId'
+  },
+  name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'name'
+  },
+  color: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    field: 'color'
+  },
+  sellingAmount: {
+    type: DataTypes.DOUBLE,
+    field: 'sellingAmount'
+  },
   quantity: {
     type: DataTypes.INTEGER,
     field: 'quantity'
   },
-  productId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'productId'
+  imageUrl: {
+    type: DataTypes.STRING,
+    field: 'imageUrl'
   },
-  supplierId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'supplierId'
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: true,
+    field: 'isActive'
   }
 }, {
   tableName: 'stock',

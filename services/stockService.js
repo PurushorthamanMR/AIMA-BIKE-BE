@@ -1,212 +1,198 @@
 const { Op } = require('sequelize');
-const { Stock, Product, Supplier, Branch, ProductCategory } = require('../models');
+const { Stock, Model, Category } = require('../models');
 const logger = require('../config/logger');
 
 class StockService {
   async save(stockDto) {
     logger.info('StockService.save() invoked');
-    
+
     const stock = await Stock.create({
-      quantity: stockDto.quantity,
-      productId: stockDto.productDto?.id || stockDto.productId,
-      supplierId: stockDto.supplierDto?.id || stockDto.supplierId,
-      branchId: stockDto.branchDto?.id || stockDto.branchId
+      modelId: stockDto.modelId ?? stockDto.model?.id,
+      name: stockDto.name,
+      color: stockDto.color,
+      sellingAmount: stockDto.sellingAmount ?? null,
+      quantity: stockDto.quantity ?? 0,
+      imageUrl: stockDto.imageUrl ?? null,
+      isActive: stockDto.isActive !== undefined ? stockDto.isActive : true
     });
 
-    const stockWithAssociations = await Stock.findByPk(stock.id, {
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
+    const withModel = await Stock.findByPk(stock.id, {
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
     });
-
-    return this.transformToDto(stockWithAssociations);
+    return this.transformToDto(withModel);
   }
 
-  async getAllStock() {
-    logger.info('StockService.getAllStock() invoked');
-    
-    const stocks = await Stock.findAll({
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ],
-      order: [['id', 'DESC']]
-    });
+  async getAllPage(pageNumber, pageSize, status, searchParams) {
+    logger.info('StockService.getAllPage() invoked');
 
-    return stocks.map(stock => this.transformToDto(stock));
-  }
-
-  async getAllPageStock(pageNumber, pageSize, status, searchParams) {
-    logger.info('StockService.getAllPageStock() invoked');
-    
     const where = {};
-    // Note: Stock model doesn't have isActive, but we can filter by product status if needed
     if (status !== undefined && status !== null) {
-      // Filter by product's isActive status
-      where['$product.isActive$'] = status;
+      where.isActive = status;
+    }
+    if (searchParams?.name) {
+      where.name = { [Op.like]: `%${searchParams.name}%` };
+    }
+    if (searchParams?.color) {
+      where.color = { [Op.like]: `%${searchParams.color}%` };
+    }
+    if (searchParams?.modelId != null) {
+      where.modelId = searchParams.modelId;
     }
 
     const offset = (pageNumber - 1) * pageSize;
-    
+
     const { count, rows } = await Stock.findAndCountAll({
       where,
-      include: [
-        { model: Product, as: 'product', required: status !== undefined },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ],
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
       limit: pageSize,
       offset: offset,
-      order: [['id', 'DESC']]
+      order: [['id', 'ASC']]
     });
 
-    const stocks = rows.map(stock => this.transformToDto(stock));
+    const content = rows.map(s => this.transformToDto(s));
 
     return {
-      content: stocks,
+      content,
       totalElements: count,
       totalPages: Math.ceil(count / pageSize),
-      pageNumber: pageNumber,
-      pageSize: pageSize
+      pageNumber,
+      pageSize
     };
   }
 
-  async updateStock(stockDto) {
-    logger.info('StockService.updateStock() invoked');
-    
+  async getByName(name) {
+    logger.info('StockService.getByName() invoked');
+
+    const where = {};
+    if (name) {
+      where.name = { [Op.like]: `%${name}%` };
+    }
+
+    const stocks = await Stock.findAll({
+      where,
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      order: [['id', 'ASC']]
+    });
+
+    return stocks.map(s => this.transformToDto(s));
+  }
+
+  async getByColor(color) {
+    logger.info('StockService.getByColor() invoked');
+
+    const where = {};
+    if (color) {
+      where.color = { [Op.like]: `%${color}%` };
+    }
+
+    const stocks = await Stock.findAll({
+      where,
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      order: [['id', 'ASC']]
+    });
+
+    return stocks.map(s => this.transformToDto(s));
+  }
+
+  async getByModel(modelId) {
+    logger.info('StockService.getByModel() invoked');
+
+    const stocks = await Stock.findAll({
+      where: { modelId, isActive: true },
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      order: [['id', 'ASC']]
+    });
+
+    return stocks.map(s => this.transformToDto(s));
+  }
+
+  async update(stockDto) {
+    logger.info('StockService.update() invoked');
+
     const stock = await Stock.findByPk(stockDto.id);
     if (!stock) {
       throw new Error('Stock not found');
     }
 
-    await stock.update({
-      quantity: stockDto.quantity !== undefined ? stockDto.quantity : stock.quantity,
-      productId: stockDto.productDto?.id || stockDto.productId || stock.productId,
-      supplierId: stockDto.supplierDto?.id || stockDto.supplierId || stock.supplierId,
-      branchId: stockDto.branchDto?.id || stockDto.branchId || stock.branchId
-    });
+    const updateData = {
+      name: stockDto.name,
+      color: stockDto.color,
+      isActive: stockDto.isActive !== undefined ? stockDto.isActive : stock.isActive
+    };
+    if (stockDto.modelId != null) updateData.modelId = stockDto.modelId;
+    if (stockDto.sellingAmount !== undefined) updateData.sellingAmount = stockDto.sellingAmount;
+    if (stockDto.quantity !== undefined) updateData.quantity = stockDto.quantity;
+    if (stockDto.imageUrl !== undefined) updateData.imageUrl = stockDto.imageUrl;
 
-    const updatedStock = await Stock.findByPk(stock.id, {
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
-    });
+    await stock.update(updateData);
 
-    return this.transformToDto(updatedStock);
+    const updated = await Stock.findByPk(stock.id, {
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
+    });
+    return this.transformToDto(updated);
   }
 
-  async updateStockStatus(stockId, status) {
-    logger.info('StockService.updateStockStatus() invoked');
-    // Note: Stock doesn't have isActive, so we update the product's status
-    const stock = await Stock.findByPk(stockId, { include: [{ model: Product, as: 'product' }] });
-    if (!stock || !stock.product) {
+  async updateStatus(stockId, status) {
+    logger.info('StockService.updateStatus() invoked');
+
+    const stock = await Stock.findByPk(stockId);
+    if (!stock) {
       return null;
     }
 
-    await stock.product.update({ isActive: status });
-    
-    const updatedStock = await Stock.findByPk(stockId, {
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
-    });
+    await stock.update({ isActive: status });
 
-    return this.transformToDto(updatedStock);
+    const updated = await Stock.findByPk(stockId, {
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
+    });
+    return this.transformToDto(updated);
   }
 
-  async getStockById(id) {
-    logger.info('StockService.getStockById() invoked');
-    
-    const stock = await Stock.findByPk(id, {
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
+  /**
+   * Add quantity to current stock (e.g. current 50 + 50 => 100)
+   */
+  async updateQuantity(stockId, quantityToAdd) {
+    logger.info('StockService.updateQuantity() invoked');
+
+    const stock = await Stock.findByPk(stockId);
+    if (!stock) {
+      return null;
+    }
+
+    const currentQuantity = stock.quantity ?? 0;
+    const newQuantity = currentQuantity + quantityToAdd;
+
+    await stock.update({ quantity: newQuantity });
+
+    const updated = await Stock.findByPk(stockId, {
+      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
     });
-
-    return stock ? [this.transformToDto(stock)] : [];
-  }
-
-  async getStockByProductCategoryId(productCategoryId) {
-    logger.info('StockService.getStockByProductCategoryId() invoked');
-    
-    const stocks = await Stock.findAll({
-      include: [
-        { 
-          model: Product, 
-          as: 'product',
-          where: { productCategory: productCategoryId },
-          required: true
-        },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
-    });
-
-    return stocks.map(stock => this.transformToDto(stock));
-  }
-
-  async getStockByProductId(productId) {
-    logger.info('StockService.getStockByProductId() invoked');
-    
-    const stocks = await Stock.findAll({
-      where: { productId },
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
-    });
-
-    return stocks.map(stock => this.transformToDto(stock));
-  }
-
-  async getStockByQuantityRange(minQuantity, maxQuantity) {
-    logger.info('StockService.getStockByQuantityRange() invoked');
-    
-    const stocks = await Stock.findAll({
-      where: {
-        quantity: {
-          [Op.between]: [minQuantity, maxQuantity]
-        }
-      },
-      include: [
-        { model: Product, as: 'product' },
-        { model: Supplier, as: 'supplier' },
-        { model: Branch, as: 'branch' }
-      ]
-    });
-
-    return stocks.map(stock => this.transformToDto(stock));
+    return this.transformToDto(updated);
   }
 
   transformToDto(stock) {
     if (!stock) return null;
-    
     return {
       id: stock.id,
+      modelId: stock.modelId,
+      name: stock.name,
+      color: stock.color,
+      sellingAmount: stock.sellingAmount,
       quantity: stock.quantity,
-      productDto: stock.product ? {
-        id: stock.product.id,
-        name: stock.product.name,
-        barcode: stock.product.barcode
-      } : null,
-      supplierDto: stock.supplier ? {
-        id: stock.supplier.id,
-        name: stock.supplier.name
-      } : null,
-      branchDto: stock.branch ? {
-        id: stock.branch.id,
-        branchName: stock.branch.branchName
-      } : null
+      imageUrl: stock.imageUrl,
+      isActive: stock.isActive,
+      modelDto: stock.model
+        ? {
+            id: stock.model.id,
+            categoryId: stock.model.categoryId,
+            name: stock.model.name,
+            imageUrl: stock.model.imageUrl,
+            isActive: stock.model.isActive,
+            categoryDto: stock.model.category
+              ? { id: stock.model.category.id, name: stock.model.category.name, isActive: stock.model.category.isActive }
+              : null
+          }
+        : null
     };
   }
 }

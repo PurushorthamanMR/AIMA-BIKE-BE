@@ -1,64 +1,43 @@
 const { sequelize } = require('../config/database');
 const UserRole = require('./UserRole');
 const User = require('./User');
-const ProductCategory = require('./ProductCategory');
-const Tax = require('./Tax');
-const Product = require('./Product');
-const Customer = require('./Customer');
-const PaymentMethod = require('./PaymentMethod');
-const Transaction = require('./Transaction');
-const TransactionDetailsList = require('./TransactionDetailsList');
-const TransactionPaymentMethod = require('./TransactionPaymentMethod');
-const Supplier = require('./Supplier');
-const Stock = require('./Stock');
-const PasswordResetToken = require('./PasswordResetToken');
 const UserLogs = require('./UserLogs');
+const Category = require('./Category');
+const Model = require('./Model');
+const Stock = require('./Stock');
+const Payment = require('./Payment');
+const Cash = require('./Cash');
+const Lease = require('./Lease');
+const Customer = require('./Customer');
 
 // Define associations
-// UserRole associations
 UserRole.hasMany(User, { foreignKey: 'userRoleId', as: 'users' });
 User.belongsTo(UserRole, { foreignKey: 'userRoleId', as: 'userRole' });
 
-// Product associations
-Product.belongsTo(Tax, { foreignKey: 'tax', as: 'taxInfo' });
-Product.belongsTo(ProductCategory, { foreignKey: 'productCategory', as: 'categoryInfo' });
-
-// Transaction associations
-Transaction.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-Transaction.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
-Transaction.hasMany(TransactionDetailsList, { foreignKey: 'transactionId', as: 'transactionDetailsList' });
-Transaction.hasMany(TransactionPaymentMethod, { foreignKey: 'transactionId', as: 'transactionPaymentMethod' });
-
-TransactionDetailsList.belongsTo(Transaction, { foreignKey: 'transactionId', as: 'transaction' });
-TransactionDetailsList.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-
-TransactionPaymentMethod.belongsTo(Transaction, { foreignKey: 'transactionId', as: 'transaction' });
-TransactionPaymentMethod.belongsTo(PaymentMethod, { foreignKey: 'paymentMethodId', as: 'paymentMethod' });
-
-// Stock associations
-Stock.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
-Stock.belongsTo(Supplier, { foreignKey: 'supplierId', as: 'supplier' });
-
-// PasswordResetToken associations
-PasswordResetToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
-
-// UserLogs associations
 UserLogs.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Category.hasMany(Model, { foreignKey: 'categoryId', as: 'models' });
+Model.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
+
+Model.hasMany(Stock, { foreignKey: 'modelId', as: 'stocks' });
+Stock.belongsTo(Model, { foreignKey: 'modelId', as: 'model' });
+
+Model.hasMany(Customer, { foreignKey: 'modelId', as: 'customers' });
+Customer.belongsTo(Model, { foreignKey: 'modelId', as: 'model' });
+
+Payment.hasMany(Customer, { foreignKey: 'paymentId', as: 'customers' });
+Customer.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
 
 module.exports = {
   sequelize,
   UserRole,
   User,
-  ProductCategory,
-  Tax,
-  Product,
-  Customer,
-  PaymentMethod,
-  Transaction,
-  TransactionDetailsList,
-  TransactionPaymentMethod,
-  Supplier,
+  UserLogs,
+  Category,
+  Model,
   Stock,
-  PasswordResetToken,
-  UserLogs
+  Payment,
+  Cash,
+  Lease,
+  Customer
 };

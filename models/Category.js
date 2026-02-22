@@ -1,15 +1,16 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-const PaymentMethod = sequelize.define('PaymentMethod', {
+const Category = sequelize.define('Category', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
   },
-  type: {
+  name: {
     type: DataTypes.STRING,
-    field: 'type'
+    allowNull: false,
+    field: 'name'
   },
   isActive: {
     type: DataTypes.BOOLEAN,
@@ -17,8 +18,8 @@ const PaymentMethod = sequelize.define('PaymentMethod', {
     field: 'isActive'
   }
 }, {
-  tableName: 'paymentMethod',
+  tableName: 'category',
   timestamps: false
 });
 
-module.exports = PaymentMethod;
+module.exports = Category;
