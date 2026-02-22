@@ -2,6 +2,7 @@ const { sequelize } = require('../config/database');
 const UserRole = require('./UserRole');
 const User = require('./User');
 const UserLogs = require('./UserLogs');
+const PasswordResetToken = require('./PasswordResetToken');
 const Category = require('./Category');
 const Model = require('./Model');
 const Stock = require('./Stock');
@@ -15,6 +16,9 @@ UserRole.hasMany(User, { foreignKey: 'userRoleId', as: 'users' });
 User.belongsTo(UserRole, { foreignKey: 'userRoleId', as: 'userRole' });
 
 UserLogs.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+PasswordResetToken.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+User.hasMany(PasswordResetToken, { foreignKey: 'userId', as: 'passwordResetTokens' });
 
 Category.hasMany(Model, { foreignKey: 'categoryId', as: 'models' });
 Model.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
@@ -33,6 +37,7 @@ module.exports = {
   UserRole,
   User,
   UserLogs,
+  PasswordResetToken,
   Category,
   Model,
   Stock,

@@ -2,44 +2,141 @@
   "info": {
     "_postman_id": "aimabike-pos-api-collection",
     "name": "AimaBike POS API - Node.js",
-    "description": "API collection for AimaBike Backend. Routes: user, userRole, userLogs, category, model, stock, payment, cash, lease, customer. Auth: Bearer token (get via Login).",
+    "description": "Separate APIs for testing. Run Login first to set jwt_token.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
     "type": "bearer",
-    "bearer": [{"key": "token", "value": "{{jwt_token}}", "type": "string"}]
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
-      "name": "Authentication",
+      "name": "1 - Authentication",
       "item": [
         {
           "name": "Register User",
           "request": {
-            "auth": {"type": "noauth"},
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {"mode": "raw", "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"emailAddress\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"mobileNumber\": \"1234567890\",\n  \"address\": \"123 Main St\",\n  \"userRoleId\": 1,\n  \"isActive\": true\n}"},
-            "url": {"raw": "{{base_url}}/user/register", "host": ["{{base_url}}"], "path": ["user", "register"]}
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"emailAddress\": \"john.doe@example.com\",\n  \"password\": \"password123\",\n  \"userRoleId\": 1\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user/register",
+              "host": ["{{base_url}}"],
+              "path": ["user", "register"]
+            }
           }
         },
         {
           "name": "Login",
-          "event": [{"listen": "test", "script": {"exec": ["if (pm.response.code === 200) {", "  var jsonData = pm.response.json();", "  if (jsonData.status && jsonData.responseDto && jsonData.responseDto.accessToken) {", "    pm.environment.set(\"jwt_token\", jsonData.responseDto.accessToken);", "  }", "}"]}}],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var jsonData = pm.response.json();",
+                  "  if (jsonData.responseDto && jsonData.responseDto.accessToken) {",
+                  "    pm.environment.set('jwt_token', jsonData.responseDto.accessToken);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
           "request": {
-            "auth": {"type": "noauth"},
+            "auth": {
+              "type": "noauth"
+            },
             "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {"mode": "raw", "raw": "{\n  \"username\": \"mrprusothaman@gmail.com\",\n  \"password\": \"Pruso2002\"\n}"},
-            "url": {"raw": "{{base_url}}/user/login", "host": ["{{base_url}}"], "path": ["user", "login"]}
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"mrprusothaman@gmail.com\",\n  \"password\": \"Pruso2002\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/user/login",
+              "host": ["{{base_url}}"],
+              "path": ["user", "login"]
+            }
+          }
+        },
+        {
+          "name": "Forgot Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"emailAddress\": \"mrprusothaman@gmail.com\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/forgot-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "forgot-password"]
+            }
+          }
+        },
+        {
+          "name": "Reset Password",
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"paste_token_from_email_here\",\n  \"newPassword\": \"newpassword123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/reset-password",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "reset-password"]
+            }
           }
         }
       ]
     },
     {
-      "name": "User",
+      "name": "2 - User",
       "item": [
-        {"name": "Get All Users (Paginated)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/user/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["user", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
+        {"name": "Get All Users", "request": {"method": "GET", "url": {"raw": "{{base_url}}/user/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["user", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
         {"name": "Get User By ID", "request": {"method": "GET", "url": {"raw": "{{base_url}}/user/getById?id=1", "host": ["{{base_url}}"], "path": ["user", "getById"], "query": [{"key": "id", "value": "1"}]}}},
         {"name": "Get User By Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/user/getByName?firstName=John&lastName=Doe", "host": ["{{base_url}}"], "path": ["user", "getByName"], "query": [{"key": "firstName", "value": "John"}, {"key": "lastName", "value": "Doe"}]}}},
         {"name": "Get User By Email", "request": {"method": "GET", "url": {"raw": "{{base_url}}/user/getByEmailAddress?emailAddress=user@example.com", "host": ["{{base_url}}"], "path": ["user", "getByEmailAddress"], "query": [{"key": "emailAddress", "value": "user@example.com"}]}}},
@@ -50,34 +147,34 @@
       ]
     },
     {
-      "name": "UserRole",
+      "name": "3 - UserRole",
       "item": [
         {"name": "Save User Role", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"userRole\": \"MANAGER\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/userRole/save", "host": ["{{base_url}}"], "path": ["userRole", "save"]}}},
         {"name": "Get All User Roles", "request": {"method": "GET", "url": {"raw": "{{base_url}}/userRole/getAll", "host": ["{{base_url}}"], "path": ["userRole", "getAll"]}}}
       ]
     },
     {
-      "name": "UserLogs",
+      "name": "4 - UserLogs",
       "item": [
         {"name": "Save User Log", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"userId\": 1,\n  \"action\": \"Login\"\n}"}, "url": {"raw": "{{base_url}}/userLogs/save", "host": ["{{base_url}}"], "path": ["userLogs", "save"]}}},
         {"name": "Get All User Logs", "request": {"method": "GET", "url": {"raw": "{{base_url}}/userLogs/getAll?pageNumber=1&pageSize=10", "host": ["{{base_url}}"], "path": ["userLogs", "getAll"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}]}}}
       ]
     },
     {
-      "name": "Category",
+      "name": "5 - Category",
       "item": [
         {"name": "Save Category", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"name\": \"Bikes\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/category/save", "host": ["{{base_url}}"], "path": ["category", "save"]}}},
-        {"name": "Get All Categories (Paginated)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/category/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["category", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
+        {"name": "Get All Categories", "request": {"method": "GET", "url": {"raw": "{{base_url}}/category/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["category", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
         {"name": "Get Category By Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/category/getByName?name=Bikes", "host": ["{{base_url}}"], "path": ["category", "getByName"], "query": [{"key": "name", "value": "Bikes"}]}}},
         {"name": "Update Category", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"name\": \"Bicycles\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/category/update", "host": ["{{base_url}}"], "path": ["category", "update"]}}},
         {"name": "Update Category Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/category/updateStatus?categoryId=1&status=false", "host": ["{{base_url}}"], "path": ["category", "updateStatus"], "query": [{"key": "categoryId", "value": "1"}, {"key": "status", "value": "false"}]}}}
       ]
     },
     {
-      "name": "Model",
+      "name": "6 - Model",
       "item": [
         {"name": "Save Model", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"categoryId\": 1,\n  \"name\": \"Model X\",\n  \"imageUrl\": \"https://example.com/img.png\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/model/save", "host": ["{{base_url}}"], "path": ["model", "save"]}}},
-        {"name": "Get All Models (Paginated)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/model/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["model", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
+        {"name": "Get All Models", "request": {"method": "GET", "url": {"raw": "{{base_url}}/model/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["model", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
         {"name": "Get Model By Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/model/getByName?name=Model", "host": ["{{base_url}}"], "path": ["model", "getByName"], "query": [{"key": "name", "value": "Model"}]}}},
         {"name": "Get Model By Category", "request": {"method": "GET", "url": {"raw": "{{base_url}}/model/getByCategory?categoryId=1", "host": ["{{base_url}}"], "path": ["model", "getByCategory"], "query": [{"key": "categoryId", "value": "1"}]}}},
         {"name": "Update Model", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"categoryId\": 1,\n  \"name\": \"Model Y\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/model/update", "host": ["{{base_url}}"], "path": ["model", "update"]}}},
@@ -85,20 +182,20 @@
       ]
     },
     {
-      "name": "Stock",
+      "name": "7 - Stock",
       "item": [
         {"name": "Save Stock", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"modelId\": 1,\n  \"name\": \"Stock A\",\n  \"color\": \"Red\",\n  \"sellingAmount\": 50000,\n  \"quantity\": 10,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/stock/save", "host": ["{{base_url}}"], "path": ["stock", "save"]}}},
-        {"name": "Get All Stock (Paginated)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/stock/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["stock", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
+        {"name": "Get All Stock", "request": {"method": "GET", "url": {"raw": "{{base_url}}/stock/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["stock", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
         {"name": "Get Stock By Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/stock/getByName?name=Stock", "host": ["{{base_url}}"], "path": ["stock", "getByName"], "query": [{"key": "name", "value": "Stock"}]}}},
         {"name": "Get Stock By Color", "request": {"method": "GET", "url": {"raw": "{{base_url}}/stock/getByColor?color=Red", "host": ["{{base_url}}"], "path": ["stock", "getByColor"], "query": [{"key": "color", "value": "Red"}]}}},
         {"name": "Get Stock By Model", "request": {"method": "GET", "url": {"raw": "{{base_url}}/stock/getByModel?modelId=1", "host": ["{{base_url}}"], "path": ["stock", "getByModel"], "query": [{"key": "modelId", "value": "1"}]}}},
         {"name": "Update Stock", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"modelId\": 1,\n  \"name\": \"Stock A Updated\",\n  \"color\": \"Blue\",\n  \"quantity\": 20,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/stock/update", "host": ["{{base_url}}"], "path": ["stock", "update"]}}},
         {"name": "Update Stock Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/stock/updateStatus?stockId=1&status=false", "host": ["{{base_url}}"], "path": ["stock", "updateStatus"], "query": [{"key": "stockId", "value": "1"}, {"key": "status", "value": "false"}]}}},
-        {"name": "Update Stock Quantity (Add)", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/stock/updateQuantity?stockId=1&quantity=50", "host": ["{{base_url}}"], "path": ["stock", "updateQuantity"], "query": [{"key": "stockId", "value": "1"}, {"key": "quantity", "value": "50"}]}}}
+        {"name": "Update Stock Quantity", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/stock/updateQuantity?stockId=1&quantity=50", "host": ["{{base_url}}"], "path": ["stock", "updateQuantity"], "query": [{"key": "stockId", "value": "1"}, {"key": "quantity", "value": "50"}]}}}
       ]
     },
     {
-      "name": "Payment",
+      "name": "8 - Payment",
       "item": [
         {"name": "Save Payment", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"name\": \"Cash\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/payment/save", "host": ["{{base_url}}"], "path": ["payment", "save"]}}},
         {"name": "Get Payment By Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/payment/getByName?name=Cash", "host": ["{{base_url}}"], "path": ["payment", "getByName"], "query": [{"key": "name", "value": "Cash"}]}}},
@@ -107,18 +204,18 @@
       ]
     },
     {
-      "name": "Cash",
+      "name": "9 - Cash",
       "item": [
-        {"name": "Save Cash", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"customerId\": 1,\n  \"copyOfNic\": \"url\",\n  \"photographOne\": \"url1\",\n  \"photographTwo\": \"url2\",\n  \"paymentReceipt\": \"url\",\n  \"mta2\": \"url\",\n  \"slip\": \"url\",\n  \"chequeNumber\": null,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/cash/save", "host": ["{{base_url}}"], "path": ["cash", "save"]}}},
-        {"name": "Update Cash", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"customerId\": 1,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/cash/update", "host": ["{{base_url}}"], "path": ["cash", "update"]}}},
+        {"name": "Save Cash", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"customerId\": 1,\n  \"copyOfNic\": \"https://example.com/nic.pdf\",\n  \"photographOne\": \"https://example.com/photo1.jpg\",\n  \"photographTwo\": \"https://example.com/photo2.jpg\",\n  \"paymentReceipt\": \"https://example.com/receipt.pdf\",\n  \"mta2\": \"https://example.com/mta2.pdf\",\n  \"slip\": \"https://example.com/slip.pdf\",\n  \"chequeNumber\": null,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/cash/save", "host": ["{{base_url}}"], "path": ["cash", "save"]}}},
+        {"name": "Update Cash", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"customerId\": 1,\n  \"copyOfNic\": \"https://example.com/nic.pdf\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/cash/update", "host": ["{{base_url}}"], "path": ["cash", "update"]}}},
         {"name": "Update Cash Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/cash/updateStatus?cashId=1&status=false", "host": ["{{base_url}}"], "path": ["cash", "updateStatus"], "query": [{"key": "cashId", "value": "1"}, {"key": "status", "value": "false"}]}}},
         {"name": "Get Cash By Customer", "request": {"method": "GET", "url": {"raw": "{{base_url}}/cash/getByCustomer?customerId=1", "host": ["{{base_url}}"], "path": ["cash", "getByCustomer"], "query": [{"key": "customerId", "value": "1"}]}}}
       ]
     },
     {
-      "name": "Lease",
+      "name": "10 - Lease",
       "item": [
-        {"name": "Save Lease", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"customerId\": 1,\n  \"companyName\": \"ABC Ltd\",\n  \"purchaseOrderNumber\": 1001,\n  \"copyOfNic\": \"url\",\n  \"photographOne\": \"url1\",\n  \"photographTwo\": \"url2\",\n  \"paymentReceipt\": \"url\",\n  \"mta2\": \"url\",\n  \"mta3\": \"url\",\n  \"chequeNumber\": null,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/lease/save", "host": ["{{base_url}}"], "path": ["lease", "save"]}}},
+        {"name": "Save Lease", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"customerId\": 1,\n  \"companyName\": \"ABC Ltd\",\n  \"purchaseOrderNumber\": 1001,\n  \"copyOfNic\": \"https://example.com/nic.pdf\",\n  \"photographOne\": \"https://example.com/photo1.jpg\",\n  \"photographTwo\": \"https://example.com/photo2.jpg\",\n  \"paymentReceipt\": \"https://example.com/receipt.pdf\",\n  \"mta2\": \"https://example.com/mta2.pdf\",\n  \"mta3\": \"https://example.com/mta3.pdf\",\n  \"chequeNumber\": null,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/lease/save", "host": ["{{base_url}}"], "path": ["lease", "save"]}}},
         {"name": "Update Lease", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"customerId\": 1,\n  \"companyName\": \"ABC Ltd Updated\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/lease/update", "host": ["{{base_url}}"], "path": ["lease", "update"]}}},
         {"name": "Update Lease Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/lease/updateStatus?leaseId=1&status=false", "host": ["{{base_url}}"], "path": ["lease", "updateStatus"], "query": [{"key": "leaseId", "value": "1"}, {"key": "status", "value": "false"}]}}},
         {"name": "Get Lease By Customer", "request": {"method": "GET", "url": {"raw": "{{base_url}}/lease/getByCustomer?customerId=1", "host": ["{{base_url}}"], "path": ["lease", "getByCustomer"], "query": [{"key": "customerId", "value": "1"}]}}},
@@ -126,21 +223,68 @@
       ]
     },
     {
-      "name": "Customer",
+      "name": "11 - Customer",
       "item": [
-        {"name": "Save Customer", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"name\": \"John Doe\",\n  \"address\": \"123 Main St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"paymentId\": 1,\n  \"contactNumber\": 771234567,\n  \"whatsappNumber\": 771234567,\n  \"sellingAmount\": 50000,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/customer/save", "host": ["{{base_url}}"], "path": ["customer", "save"]}}},
-        {"name": "Get All Customers (Paginated)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["customer", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
+        {
+          "name": "Save Customer only",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"address\": \"123 Main St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"contactNumber\": 771234567,\n  \"whatsappNumber\": 771234567,\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"dateOfPurchase\": \"2024-01-10\",\n  \"loyalityCardNo\": 1001,\n  \"dateOfDelivery\": \"2024-01-15\",\n  \"sellingAmount\": 150000,\n  \"registrationFees\": 5000,\n  \"advancePaymentAmount\": 50000,\n  \"advancePaymentDate\": null,\n  \"balancePaymentAmount\": 100000,\n  \"paymentId\": 1,\n  \"isActive\": true\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/save",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "save"]
+            }
+          }
+        },
+        {
+          "name": "Save Customer with Lease",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"address\": \"123 Main St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"contactNumber\": 771234567,\n  \"whatsappNumber\": 771234567,\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"dateOfPurchase\": \"2024-01-10\",\n  \"loyalityCardNo\": 1001,\n  \"dateOfDelivery\": \"2024-01-15\",\n  \"sellingAmount\": 150000,\n  \"registrationFees\": 5000,\n  \"advancePaymentAmount\": 50000,\n  \"advancePaymentDate\": null,\n  \"balancePaymentAmount\": 100000,\n  \"paymentId\": 1,\n  \"isActive\": true,\n  \"paymentOption\": \"lease\",\n  \"leaseData\": {\n    \"companyName\": \"ABC Ltd\",\n    \"purchaseOrderNumber\": 1001,\n    \"copyOfNic\": \"https://example.com/nic.pdf\",\n    \"photographOne\": \"https://example.com/photo1.jpg\",\n    \"photographTwo\": \"https://example.com/photo2.jpg\",\n    \"paymentReceipt\": \"https://example.com/receipt.pdf\",\n    \"mta2\": \"https://example.com/mta2.pdf\",\n    \"mta3\": \"https://example.com/mta3.pdf\",\n    \"chequeNumber\": null,\n    \"isActive\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/saveWithPaymentOption",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "saveWithPaymentOption"]
+            }
+          }
+        },
+        {
+          "name": "Save Customer with Cash",
+          "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Jane Doe\",\n  \"address\": \"456 Oak St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Teacher\",\n  \"religion\": \"Buddhist\",\n  \"dateOfBirth\": \"1992-08-20\",\n  \"contactNumber\": 772345678,\n  \"whatsappNumber\": 772345678,\n  \"nic\": \"987654321V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH002\",\n  \"motorNumber\": \"M002\",\n  \"colorOfVehicle\": \"Red\",\n  \"dateOfPurchase\": \"2024-02-01\",\n  \"loyalityCardNo\": 1002,\n  \"dateOfDelivery\": \"2024-02-05\",\n  \"sellingAmount\": 140000,\n  \"registrationFees\": 5000,\n  \"advancePaymentAmount\": 70000,\n  \"advancePaymentDate\": null,\n  \"balancePaymentAmount\": 70000,\n  \"paymentId\": 1,\n  \"isActive\": true,\n  \"paymentOption\": \"cash\",\n  \"cashData\": {\n    \"copyOfNic\": \"https://example.com/nic.pdf\",\n    \"photographOne\": \"https://example.com/photo1.jpg\",\n    \"photographTwo\": \"https://example.com/photo2.jpg\",\n    \"paymentReceipt\": \"https://example.com/receipt.pdf\",\n    \"mta2\": \"https://example.com/mta2.pdf\",\n    \"slip\": \"https://example.com/slip.pdf\",\n    \"chequeNumber\": null,\n    \"isActive\": true\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/customer/saveWithPaymentOption",
+              "host": ["{{base_url}}"],
+              "path": ["customer", "saveWithPaymentOption"]
+            }
+          }
+        },
+        {"name": "Get All Customers", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["customer", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
         {"name": "Get Customer By Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getByName?name=John", "host": ["{{base_url}}"], "path": ["customer", "getByName"], "query": [{"key": "name", "value": "John"}]}}},
-        {"name": "Get Customer By Color", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getByColor?colorOfVehicle=Black", "host": ["{{base_url}}"], "path": ["customer", "getByColor"], "query": [{"key": "colorOfVehicle", "value": "Black"}]}}},
+        {"name": "Get Customer By Color", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getByColor?color=Black", "host": ["{{base_url}}"], "path": ["customer", "getByColor"], "query": [{"key": "color", "value": "Black"}]}}},
         {"name": "Get Customer By Model", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getByModel?modelId=1", "host": ["{{base_url}}"], "path": ["customer", "getByModel"], "query": [{"key": "modelId", "value": "1"}]}}},
         {"name": "Get Customer By Payment", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getByPayment?paymentId=1", "host": ["{{base_url}}"], "path": ["customer", "getByPayment"], "query": [{"key": "paymentId", "value": "1"}]}}},
-        {"name": "Update Customer", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"name\": \"John Doe Updated\",\n  \"address\": \"456 New St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"paymentId\": 1,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/customer/update", "host": ["{{base_url}}"], "path": ["customer", "update"]}}},
+        {"name": "Update Customer", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"name\": \"John Doe Updated\",\n  \"address\": \"123 Main St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"contactNumber\": 771234567,\n  \"whatsappNumber\": 771234567,\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"dateOfPurchase\": \"2024-01-10\",\n  \"loyalityCardNo\": 1001,\n  \"dateOfDelivery\": \"2024-01-15\",\n  \"sellingAmount\": 150000,\n  \"registrationFees\": 5000,\n  \"advancePaymentAmount\": 50000,\n  \"advancePaymentDate\": \"2024-01-10\",\n  \"balancePaymentAmount\": 100000,\n  \"paymentId\": 1,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/customer/update", "host": ["{{base_url}}"], "path": ["customer", "update"]}}},
         {"name": "Update Customer Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/customer/updateStatus?customerId=1&status=false", "host": ["{{base_url}}"], "path": ["customer", "updateStatus"], "query": [{"key": "customerId", "value": "1"}, {"key": "status", "value": "false"}]}}}
       ]
     }
   ],
   "variable": [
-    {"key": "base_url", "value": "http://localhost:8081", "type": "string"},
-    {"key": "jwt_token", "value": "", "type": "string"}
+    {"key": "base_url", "value": "http://localhost:8081"},
+    {"key": "jwt_token", "value": ""}
   ]
 }

@@ -1,5 +1,7 @@
 const { Op } = require('sequelize');
 const { Customer, Model, Category, Payment } = require('../models');
+const cashService = require('./cashService');
+const leaseService = require('./leaseService');
 const logger = require('../config/logger');
 
 const defaultInclude = [
@@ -10,6 +12,18 @@ const defaultInclude = [
 class CustomerService {
   async save(customerDto) {
     logger.info('CustomerService.save() invoked');
+
+    const modelId = customerDto.modelId ?? customerDto.model?.id;
+    const paymentId = customerDto.paymentId ?? customerDto.payment?.id;
+
+    const modelExists = await Model.findByPk(modelId);
+    if (!modelExists) {
+      throw new Error(`Model with id ${modelId} not found. Create a Category first, then a Model, and use a valid modelId.`);
+    }
+    const paymentExists = await Payment.findByPk(paymentId);
+    if (!paymentExists) {
+      throw new Error(`Payment with id ${paymentId} not found. Create a Payment first and use a valid paymentId.`);
+    }
 
     const customer = await Customer.create({
       name: customerDto.name,
@@ -32,7 +46,9 @@ class CustomerService {
       sellingAmount: customerDto.sellingAmount ?? null,
       registrationFees: customerDto.registrationFees ?? null,
       advancePaymentAmount: customerDto.advancePaymentAmount ?? null,
-      advancePaymentDate: customerDto.advancePaymentDate ?? null,
+      advancePaymentDate: customerDto.advancePaymentDate != null && customerDto.advancePaymentDate !== ''
+        ? customerDto.advancePaymentDate
+        : new Date().toISOString().split('T')[0],
       balancePaymentAmount: customerDto.balancePaymentAmount ?? null,
       balancePaymentDate: customerDto.balancePaymentDate ?? null,
       paymentId: customerDto.paymentId ?? customerDto.payment?.id,
@@ -41,6 +57,74 @@ class CustomerService {
 
     const withAssoc = await Customer.findByPk(customer.id, { include: defaultInclude });
     return this.transformToDto(withAssoc);
+  }
+
+  /**
+   * Save customer and optionally Lease OR Cash based on paymentOption.
+   * Body: { ...customerFields, paymentOption: 'lease'|'cash', leaseData?: {...}, cashData?: {...} }
+   * Only one of leaseData or cashData is used, depending on paymentOption.
+   */
+  async saveWithPaymentOption(dto) {
+    logger.info('CustomerService.saveWithPaymentOption() invoked');
+
+    const { paymentOption, leaseData, cashData, ...customerFields } = dto;
+
+    const modelId = customerFields.modelId ?? customerFields.model?.id;
+    const paymentId = customerFields.paymentId ?? customerFields.payment?.id;
+
+    const modelExists = await Model.findByPk(modelId);
+    if (!modelExists) {
+      throw new Error(`Model with id ${modelId} not found. Create a Category first, then a Model (e.g. POST /category/save, then POST /model/save), and use a valid modelId.`);
+    }
+    const paymentExists = await Payment.findByPk(paymentId);
+    if (!paymentExists) {
+      throw new Error(`Payment with id ${paymentId} not found. Create a Payment first (e.g. POST /payment/save) and use a valid paymentId.`);
+    }
+
+    const customer = await Customer.create({
+      name: customerFields.name,
+      address: customerFields.address,
+      province: customerFields.province,
+      district: customerFields.district,
+      occupation: customerFields.occupation,
+      dateOfBirth: customerFields.dateOfBirth ?? null,
+      religion: customerFields.religion,
+      contactNumber: customerFields.contactNumber ?? null,
+      whatsappNumber: customerFields.whatsappNumber ?? null,
+      nic: customerFields.nic,
+      modelId: customerFields.modelId ?? customerFields.model?.id,
+      chassisNumber: customerFields.chassisNumber,
+      motorNumber: customerFields.motorNumber,
+      colorOfVehicle: customerFields.colorOfVehicle,
+      dateOfPurchase: customerFields.dateOfPurchase ?? null,
+      loyalityCardNo: customerFields.loyalityCardNo ?? null,
+      dateOfDelivery: customerFields.dateOfDelivery ?? null,
+      sellingAmount: customerFields.sellingAmount ?? null,
+      registrationFees: customerFields.registrationFees ?? null,
+      advancePaymentAmount: customerFields.advancePaymentAmount ?? null,
+      advancePaymentDate: customerFields.advancePaymentDate != null && customerFields.advancePaymentDate !== ''
+        ? customerFields.advancePaymentDate
+        : new Date().toISOString().split('T')[0],
+      balancePaymentAmount: customerFields.balancePaymentAmount ?? null,
+      balancePaymentDate: customerFields.balancePaymentDate ?? null,
+      paymentId: customerFields.paymentId ?? customerFields.payment?.id,
+      isActive: customerFields.isActive !== undefined ? customerFields.isActive : true
+    });
+
+    const withAssoc = await Customer.findByPk(customer.id, { include: defaultInclude });
+    const customerDto = this.transformToDto(withAssoc);
+
+    const result = { customerDto, leaseDto: null, cashDto: null };
+
+    if (paymentOption === 'lease' && leaseData) {
+      const leaseDto = await leaseService.save({ ...leaseData, customerId: customer.id });
+      result.leaseDto = leaseDto;
+    } else if (paymentOption === 'cash' && cashData) {
+      const cashDto = await cashService.save({ ...cashData, customerId: customer.id });
+      result.cashDto = cashDto;
+    }
+
+    return result;
   }
 
   async getAllPage(pageNumber, pageSize, status, searchParams) {

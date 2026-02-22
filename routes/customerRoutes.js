@@ -16,7 +16,27 @@ router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), 
     res.json(responseUtil.getServiceResponse(customerDto));
   } catch (error) {
     logger.error('Error saving customer:', error);
-    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error saving customer', 500));
+    const isValidation = error.message && (error.message.includes('not found') || error.message.includes('Model with') || error.message.includes('Payment with'));
+    res.status(isValidation ? 400 : 500).json(responseUtil.getErrorServiceResponse(error.message || 'Error saving customer', isValidation ? 400 : 500));
+  }
+});
+
+/**
+ * Save customer + Lease OR Cash (customer chooses one option).
+ * POST /customer/saveWithPaymentOption
+ * Body: { ...customerFields, paymentOption: 'lease'|'cash', leaseData?: {...}, cashData?: {...} }
+ * - If paymentOption === 'lease', include leaseData (companyName, purchaseOrderNumber, copyOfNic, photographOne, photographTwo, paymentReceipt, mta2, mta3, chequeNumber, etc.)
+ * - If paymentOption === 'cash', include cashData (copyOfNic, photographOne, photographTwo, paymentReceipt, mta2, slip, chequeNumber, etc.)
+ */
+router.post('/saveWithPaymentOption', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CustomerController.saveWithPaymentOption() invoked');
+    const result = await customerService.saveWithPaymentOption(req.body);
+    res.json(responseUtil.getServiceResponse(result));
+  } catch (error) {
+    logger.error('Error saving customer with payment option:', error);
+    const isValidation = error.message && (error.message.includes('not found') || error.message.includes('Model with') || error.message.includes('Payment with'));
+    res.status(isValidation ? 400 : 500).json(responseUtil.getErrorServiceResponse(error.message || 'Error saving customer with payment option', isValidation ? 400 : 500));
   }
 });
 

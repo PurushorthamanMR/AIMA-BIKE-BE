@@ -20,6 +20,7 @@ app.use(morgan('combined', { stream: { write: message => logger.info(message.tri
 
 // Routes
 app.use('/user', require('./routes/userRoutes'));
+app.use('/auth', require('./routes/passwordResetRoutes'));
 app.use('/userRole', require('./routes/userRoleRoutes'));
 app.use('/userLogs', require('./routes/userLogsRoutes'));
 app.use('/category', require('./routes/categoryRoutes'));
