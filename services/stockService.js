@@ -9,6 +9,7 @@ class StockService {
     const stock = await Stock.create({
       modelId: stockDto.modelId ?? stockDto.model?.id,
       name: stockDto.name,
+      itemCode: stockDto.itemCode ?? null,
       color: stockDto.color,
       sellingAmount: stockDto.sellingAmount ?? null,
       quantity: stockDto.quantity ?? 0,
@@ -120,6 +121,7 @@ class StockService {
       isActive: stockDto.isActive !== undefined ? stockDto.isActive : stock.isActive
     };
     if (stockDto.modelId != null) updateData.modelId = stockDto.modelId;
+    if (stockDto.itemCode !== undefined) updateData.itemCode = stockDto.itemCode;
     if (stockDto.sellingAmount !== undefined) updateData.sellingAmount = stockDto.sellingAmount;
     if (stockDto.quantity !== undefined) updateData.quantity = stockDto.quantity;
     if (stockDto.imageUrl !== undefined) updateData.imageUrl = stockDto.imageUrl;
@@ -146,6 +148,39 @@ class StockService {
       include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
     });
     return this.transformToDto(updated);
+  }
+
+  /**
+   * Reduce stock quantity by model (and optional color/itemCode).
+   * Used when saving dealer consignment note items or customer (sale).
+   * @param {number} modelId - Model ID
+   * @param {number} quantityToReduce - Quantity to deduct
+   * @param {Object} options - { color?, itemCode?, transaction? }
+   * @returns {Object} Updated stock row
+   */
+  async reduceQuantityByModel(modelId, quantityToReduce, options = {}) {
+    const where = { modelId, isActive: true };
+    if (options.color != null && options.color !== '') where.color = options.color;
+    if (options.itemCode != null && options.itemCode !== '') where.itemCode = options.itemCode;
+
+    const findOpts = { where, order: [['id', 'ASC']] };
+    if (options.transaction) findOpts.transaction = options.transaction;
+
+    const stocks = await Stock.findAll(findOpts);
+    if (stocks.length === 0) {
+      throw new Error(`No matching stock found for modelId ${modelId}${options.color ? ` and color ${options.color}` : ''}`);
+    }
+
+    const stock = stocks[0];
+    const current = stock.quantity ?? 0;
+    if (current < quantityToReduce) {
+      throw new Error(`Insufficient stock: required ${quantityToReduce}, available ${current} (modelId ${modelId})`);
+    }
+
+    const updateOpts = {};
+    if (options.transaction) updateOpts.transaction = options.transaction;
+    await stock.update({ quantity: current - quantityToReduce }, updateOpts);
+    return stock;
   }
 
   /**
@@ -176,6 +211,7 @@ class StockService {
       id: stock.id,
       modelId: stock.modelId,
       name: stock.name,
+      itemCode: stock.itemCode,
       color: stock.color,
       sellingAmount: stock.sellingAmount,
       quantity: stock.quantity,

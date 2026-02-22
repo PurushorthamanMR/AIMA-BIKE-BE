@@ -6,22 +6,6 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const logger = require('../config/logger');
 
 /**
- * Save a new customer
- * POST /customer/save
- */
-router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
-  try {
-    logger.info('CustomerController.save() invoked');
-    const customerDto = await customerService.save(req.body);
-    res.json(responseUtil.getServiceResponse(customerDto));
-  } catch (error) {
-    logger.error('Error saving customer:', error);
-    const isValidation = error.message && (error.message.includes('not found') || error.message.includes('Model with') || error.message.includes('Payment with'));
-    res.status(isValidation ? 400 : 500).json(responseUtil.getErrorServiceResponse(error.message || 'Error saving customer', isValidation ? 400 : 500));
-  }
-});
-
-/**
  * Save customer + Lease OR Cash (customer chooses one option).
  * POST /customer/saveWithPaymentOption
  * Body: { ...customerFields, paymentOption: 'lease'|'cash', leaseData?: {...}, cashData?: {...} }

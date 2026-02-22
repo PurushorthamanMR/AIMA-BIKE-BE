@@ -20,6 +20,24 @@ class CashService {
     return this.transformToDto(cash);
   }
 
+  async saveWithTransaction(cashDto, transaction) {
+    const cash = await Cash.create(
+      {
+        customerId: cashDto.customerId ?? cashDto.customer?.id,
+        copyOfNic: cashDto.copyOfNic ?? null,
+        photographOne: cashDto.photographOne ?? null,
+        photographTwo: cashDto.photographTwo ?? null,
+        paymentReceipt: cashDto.paymentReceipt ?? null,
+        mta2: cashDto.mta2 ?? null,
+        slip: cashDto.slip ?? null,
+        chequeNumber: cashDto.chequeNumber ?? null,
+        isActive: cashDto.isActive !== undefined ? cashDto.isActive : true
+      },
+      { transaction }
+    );
+    return this.transformToDto(cash);
+  }
+
   async update(cashDto) {
     logger.info('CashService.update() invoked');
 

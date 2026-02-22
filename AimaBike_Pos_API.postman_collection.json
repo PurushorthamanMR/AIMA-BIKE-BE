@@ -226,22 +226,6 @@
       "name": "11 - Customer",
       "item": [
         {
-          "name": "Save Customer only",
-          "request": {
-            "method": "POST",
-            "header": [{"key": "Content-Type", "value": "application/json"}],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"address\": \"123 Main St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"contactNumber\": 771234567,\n  \"whatsappNumber\": 771234567,\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"dateOfPurchase\": \"2024-01-10\",\n  \"loyalityCardNo\": 1001,\n  \"dateOfDelivery\": \"2024-01-15\",\n  \"sellingAmount\": 150000,\n  \"registrationFees\": 5000,\n  \"advancePaymentAmount\": 50000,\n  \"advancePaymentDate\": null,\n  \"balancePaymentAmount\": 100000,\n  \"paymentId\": 1,\n  \"isActive\": true\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/customer/save",
-              "host": ["{{base_url}}"],
-              "path": ["customer", "save"]
-            }
-          }
-        },
-        {
           "name": "Save Customer with Lease",
           "request": {
             "method": "POST",
@@ -280,6 +264,27 @@
         {"name": "Get Customer By Payment", "request": {"method": "GET", "url": {"raw": "{{base_url}}/customer/getByPayment?paymentId=1", "host": ["{{base_url}}"], "path": ["customer", "getByPayment"], "query": [{"key": "paymentId", "value": "1"}]}}},
         {"name": "Update Customer", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"name\": \"John Doe Updated\",\n  \"address\": \"123 Main St\",\n  \"province\": \"Northern\",\n  \"district\": \"Jaffna\",\n  \"occupation\": \"Engineer\",\n  \"religion\": \"Christian\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"contactNumber\": 771234567,\n  \"whatsappNumber\": 771234567,\n  \"nic\": \"123456789V\",\n  \"modelId\": 1,\n  \"chassisNumber\": \"CH001\",\n  \"motorNumber\": \"M001\",\n  \"colorOfVehicle\": \"Black\",\n  \"dateOfPurchase\": \"2024-01-10\",\n  \"loyalityCardNo\": 1001,\n  \"dateOfDelivery\": \"2024-01-15\",\n  \"sellingAmount\": 150000,\n  \"registrationFees\": 5000,\n  \"advancePaymentAmount\": 50000,\n  \"advancePaymentDate\": \"2024-01-10\",\n  \"balancePaymentAmount\": 100000,\n  \"paymentId\": 1,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/customer/update", "host": ["{{base_url}}"], "path": ["customer", "update"]}}},
         {"name": "Update Customer Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/customer/updateStatus?customerId=1&status=false", "host": ["{{base_url}}"], "path": ["customer", "updateStatus"], "query": [{"key": "customerId", "value": "1"}, {"key": "status", "value": "false"}]}}}
+      ]
+    },
+    {
+      "name": "12 - Dealer Consignment Note",
+      "item": [
+        {"name": "Save Dealer Consignment Note", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"dealerCode\": \"DC001\",\n  \"dealerName\": \"ABC Motors\",\n  \"address\": \"123 Main St\",\n  \"consignmentNoteNo\": \"CN-2025-001\",\n  \"date\": \"2025-02-23\",\n  \"deliveryMode\": \"By Road\",\n  \"vehicleNo\": \"MH-01-AB-1234\",\n  \"references\": \"PO-123\",\n  \"contactPerson\": \"John\",\n  \"isActive\": true,\n  \"items\": [\n    {\n      \"modelId\": 1,\n      \"itemCode\": \"BIKE-001\",\n      \"chassisNumber\": \"CH123\",\n      \"motorNumber\": \"MN456\",\n      \"color\": \"Black\",\n      \"quantity\": 2\n    }\n  ]\n}"}, "url": {"raw": "{{base_url}}/dealerConsignmentNote/save", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "save"]}}},
+        {"name": "Get All Dealer Consignment Notes", "request": {"method": "GET", "url": {"raw": "{{base_url}}/dealerConsignmentNote/getAllPage?pageNumber=1&pageSize=10&status=true", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "status", "value": "true"}]}}},
+        {"name": "Get By Dealer Code", "request": {"method": "GET", "url": {"raw": "{{base_url}}/dealerConsignmentNote/getByDealerCode?dealerCode=DC001", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "getByDealerCode"], "query": [{"key": "dealerCode", "value": "DC001"}]}}},
+        {"name": "Get By Dealer Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/dealerConsignmentNote/getByDealerName?dealerName=ABC", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "getByDealerName"], "query": [{"key": "dealerName", "value": "ABC"}]}}},
+        {"name": "Get By Consignment Note No", "request": {"method": "GET", "url": {"raw": "{{base_url}}/dealerConsignmentNote/getByConsignmentNoteNo?consignmentNoteNo=CN-2025-001", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "getByConsignmentNoteNo"], "query": [{"key": "consignmentNoteNo", "value": "CN-2025-001"}]}}},
+        {"name": "Update Dealer Consignment Note", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"dealerCode\": \"DC001\",\n  \"dealerName\": \"ABC Motors\",\n  \"address\": \"123 Main St\",\n  \"consignmentNoteNo\": \"CN-2025-001\",\n  \"date\": \"2025-02-23\",\n  \"deliveryMode\": \"By Road\",\n  \"vehicleNo\": \"MH-01-AB-1234\",\n  \"references\": \"PO-123\",\n  \"contactPerson\": \"John\",\n  \"isActive\": true,\n  \"items\": [\n    {\n      \"modelId\": 1,\n      \"itemCode\": \"BIKE-001\",\n      \"chassisNumber\": \"CH123\",\n      \"motorNumber\": \"MN456\",\n      \"color\": \"Black\",\n      \"quantity\": 3\n    }\n  ]\n}"}, "url": {"raw": "{{base_url}}/dealerConsignmentNote/update", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "update"]}}},
+        {"name": "Update Dealer Consignment Note Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/dealerConsignmentNote/updateStatus?noteId=1&status=false", "host": ["{{base_url}}"], "path": ["dealerConsignmentNote", "updateStatus"], "query": [{"key": "noteId", "value": "1"}, {"key": "status", "value": "false"}]}}}
+      ]
+    },
+    {
+      "name": "13 - Shop Details",
+      "item": [
+        {"name": "Save Shop Detail", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"name\": \"Main Branch\",\n  \"logo\": \"https://example.com/logo.png\",\n  \"address\": \"123 Main St\",\n  \"phoneNumber\": \"+94112345678\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/shopDetails/save", "host": ["{{base_url}}"], "path": ["shopDetails", "save"]}}},
+        {"name": "Get All Shop Details", "request": {"method": "GET", "url": {"raw": "{{base_url}}/shopDetails/getAll", "host": ["{{base_url}}"], "path": ["shopDetails", "getAll"]}}},
+        {"name": "Update Shop Detail", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"name\": \"Main Branch Updated\",\n  \"logo\": \"https://example.com/logo.png\",\n  \"address\": \"123 Main St\",\n  \"phoneNumber\": \"+94112345678\",\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/shopDetails/update", "host": ["{{base_url}}"], "path": ["shopDetails", "update"]}}},
+        {"name": "Update Shop Detail Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/shopDetails/updateStatus?shopId=1&status=false", "host": ["{{base_url}}"], "path": ["shopDetails", "updateStatus"], "query": [{"key": "shopId", "value": "1"}, {"key": "status", "value": "false"}]}}}
       ]
     }
   ],

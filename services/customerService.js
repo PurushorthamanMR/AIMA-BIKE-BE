@@ -1,7 +1,9 @@
 const { Op } = require('sequelize');
 const { Customer, Model, Category, Payment } = require('../models');
+const { sequelize } = require('../config/database');
 const cashService = require('./cashService');
 const leaseService = require('./leaseService');
+const stockService = require('./stockService');
 const logger = require('../config/logger');
 
 const defaultInclude = [
@@ -10,57 +12,9 @@ const defaultInclude = [
 ];
 
 class CustomerService {
-  async save(customerDto) {
-    logger.info('CustomerService.save() invoked');
-
-    const modelId = customerDto.modelId ?? customerDto.model?.id;
-    const paymentId = customerDto.paymentId ?? customerDto.payment?.id;
-
-    const modelExists = await Model.findByPk(modelId);
-    if (!modelExists) {
-      throw new Error(`Model with id ${modelId} not found. Create a Category first, then a Model, and use a valid modelId.`);
-    }
-    const paymentExists = await Payment.findByPk(paymentId);
-    if (!paymentExists) {
-      throw new Error(`Payment with id ${paymentId} not found. Create a Payment first and use a valid paymentId.`);
-    }
-
-    const customer = await Customer.create({
-      name: customerDto.name,
-      address: customerDto.address,
-      province: customerDto.province,
-      district: customerDto.district,
-      occupation: customerDto.occupation,
-      dateOfBirth: customerDto.dateOfBirth ?? null,
-      religion: customerDto.religion,
-      contactNumber: customerDto.contactNumber ?? null,
-      whatsappNumber: customerDto.whatsappNumber ?? null,
-      nic: customerDto.nic,
-      modelId: customerDto.modelId ?? customerDto.model?.id,
-      chassisNumber: customerDto.chassisNumber,
-      motorNumber: customerDto.motorNumber,
-      colorOfVehicle: customerDto.colorOfVehicle,
-      dateOfPurchase: customerDto.dateOfPurchase ?? null,
-      loyalityCardNo: customerDto.loyalityCardNo ?? null,
-      dateOfDelivery: customerDto.dateOfDelivery ?? null,
-      sellingAmount: customerDto.sellingAmount ?? null,
-      registrationFees: customerDto.registrationFees ?? null,
-      advancePaymentAmount: customerDto.advancePaymentAmount ?? null,
-      advancePaymentDate: customerDto.advancePaymentDate != null && customerDto.advancePaymentDate !== ''
-        ? customerDto.advancePaymentDate
-        : new Date().toISOString().split('T')[0],
-      balancePaymentAmount: customerDto.balancePaymentAmount ?? null,
-      balancePaymentDate: customerDto.balancePaymentDate ?? null,
-      paymentId: customerDto.paymentId ?? customerDto.payment?.id,
-      isActive: customerDto.isActive !== undefined ? customerDto.isActive : true
-    });
-
-    const withAssoc = await Customer.findByPk(customer.id, { include: defaultInclude });
-    return this.transformToDto(withAssoc);
-  }
-
   /**
    * Save customer and optionally Lease OR Cash based on paymentOption.
+   * Reduces stock.quantity by 1 for the customer's model (matched by modelId and colorOfVehicle).
    * Body: { ...customerFields, paymentOption: 'lease'|'cash', leaseData?: {...}, cashData?: {...} }
    * Only one of leaseData or cashData is used, depending on paymentOption.
    */
@@ -81,50 +35,65 @@ class CustomerService {
       throw new Error(`Payment with id ${paymentId} not found. Create a Payment first (e.g. POST /payment/save) and use a valid paymentId.`);
     }
 
-    const customer = await Customer.create({
-      name: customerFields.name,
-      address: customerFields.address,
-      province: customerFields.province,
-      district: customerFields.district,
-      occupation: customerFields.occupation,
-      dateOfBirth: customerFields.dateOfBirth ?? null,
-      religion: customerFields.religion,
-      contactNumber: customerFields.contactNumber ?? null,
-      whatsappNumber: customerFields.whatsappNumber ?? null,
-      nic: customerFields.nic,
-      modelId: customerFields.modelId ?? customerFields.model?.id,
-      chassisNumber: customerFields.chassisNumber,
-      motorNumber: customerFields.motorNumber,
-      colorOfVehicle: customerFields.colorOfVehicle,
-      dateOfPurchase: customerFields.dateOfPurchase ?? null,
-      loyalityCardNo: customerFields.loyalityCardNo ?? null,
-      dateOfDelivery: customerFields.dateOfDelivery ?? null,
-      sellingAmount: customerFields.sellingAmount ?? null,
-      registrationFees: customerFields.registrationFees ?? null,
-      advancePaymentAmount: customerFields.advancePaymentAmount ?? null,
-      advancePaymentDate: customerFields.advancePaymentDate != null && customerFields.advancePaymentDate !== ''
-        ? customerFields.advancePaymentDate
-        : new Date().toISOString().split('T')[0],
-      balancePaymentAmount: customerFields.balancePaymentAmount ?? null,
-      balancePaymentDate: customerFields.balancePaymentDate ?? null,
-      paymentId: customerFields.paymentId ?? customerFields.payment?.id,
-      isActive: customerFields.isActive !== undefined ? customerFields.isActive : true
-    });
+    const transaction = await sequelize.transaction();
+    try {
+      const customer = await Customer.create(
+        {
+          name: customerFields.name,
+          address: customerFields.address,
+          province: customerFields.province,
+          district: customerFields.district,
+          occupation: customerFields.occupation,
+          dateOfBirth: customerFields.dateOfBirth ?? null,
+          religion: customerFields.religion,
+          contactNumber: customerFields.contactNumber ?? null,
+          whatsappNumber: customerFields.whatsappNumber ?? null,
+          nic: customerFields.nic,
+          modelId: customerFields.modelId ?? customerFields.model?.id,
+          chassisNumber: customerFields.chassisNumber,
+          motorNumber: customerFields.motorNumber,
+          colorOfVehicle: customerFields.colorOfVehicle,
+          dateOfPurchase: customerFields.dateOfPurchase ?? null,
+          loyalityCardNo: customerFields.loyalityCardNo ?? null,
+          dateOfDelivery: customerFields.dateOfDelivery ?? null,
+          sellingAmount: customerFields.sellingAmount ?? null,
+          registrationFees: customerFields.registrationFees ?? null,
+          advancePaymentAmount: customerFields.advancePaymentAmount ?? null,
+          advancePaymentDate: customerFields.advancePaymentDate != null && customerFields.advancePaymentDate !== ''
+            ? customerFields.advancePaymentDate
+            : new Date().toISOString().split('T')[0],
+          balancePaymentAmount: customerFields.balancePaymentAmount ?? null,
+          balancePaymentDate: customerFields.balancePaymentDate ?? null,
+          paymentId: customerFields.paymentId ?? customerFields.payment?.id,
+          isActive: customerFields.isActive !== undefined ? customerFields.isActive : true
+        },
+        { transaction }
+      );
 
-    const withAssoc = await Customer.findByPk(customer.id, { include: defaultInclude });
-    const customerDto = this.transformToDto(withAssoc);
+      let leaseDto = null;
+      let cashDto = null;
+      if (paymentOption === 'lease' && leaseData) {
+        leaseDto = await leaseService.saveWithTransaction({ ...leaseData, customerId: customer.id }, transaction);
+      } else if (paymentOption === 'cash' && cashData) {
+        cashDto = await cashService.saveWithTransaction({ ...cashData, customerId: customer.id }, transaction);
+      }
 
-    const result = { customerDto, leaseDto: null, cashDto: null };
+      // Reduce stock by 1 for the customer's model (match by modelId and colorOfVehicle)
+      await stockService.reduceQuantityByModel(customer.modelId, 1, {
+        color: customerFields.colorOfVehicle || undefined,
+        transaction
+      });
 
-    if (paymentOption === 'lease' && leaseData) {
-      const leaseDto = await leaseService.save({ ...leaseData, customerId: customer.id });
-      result.leaseDto = leaseDto;
-    } else if (paymentOption === 'cash' && cashData) {
-      const cashDto = await cashService.save({ ...cashData, customerId: customer.id });
-      result.cashDto = cashDto;
+      await transaction.commit();
+
+      const withAssoc = await Customer.findByPk(customer.id, { include: defaultInclude });
+      const customerDto = this.transformToDto(withAssoc);
+
+      return { customerDto, leaseDto, cashDto };
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
     }
-
-    return result;
   }
 
   async getAllPage(pageNumber, pageSize, status, searchParams) {

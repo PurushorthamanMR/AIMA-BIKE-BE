@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js","generate-api-doc":"node scripts/generate-api-doc.js",
+    "dev": "nodemon server.js",
+    "generate-api-doc": "node scripts/generate-api-doc.js",
+    "md-to-docx": "node scripts/md-to-docx.mjs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
@@ -30,6 +32,7 @@
     "winston": "^3.11.0"
   },
   "devDependencies": {
+    "@mohtasham/md-to-docx": "^2.6.1",
     "docx": "^9.5.3",
     "nodemon": "^3.0.2"
   }

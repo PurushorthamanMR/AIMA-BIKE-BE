@@ -1,43 +1,31 @@
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/database');
 
-const Stock = sequelize.define('Stock', {
+const ShopDetail = sequelize.define('ShopDetail', {
   id: {
     type: DataTypes.INTEGER,
     primaryKey: true,
     autoIncrement: true
-  },
-  modelId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'modelId'
   },
   name: {
     type: DataTypes.STRING,
     allowNull: false,
     field: 'name'
   },
-  itemCode: {
+  logo: {
     type: DataTypes.STRING,
     allowNull: true,
-    field: 'itemCode'
+    field: 'logo'
   },
-  color: {
+  address: {
     type: DataTypes.STRING,
-    allowNull: false,
-    field: 'color'
+    allowNull: true,
+    field: 'address'
   },
-  sellingAmount: {
-    type: DataTypes.DOUBLE,
-    field: 'sellingAmount'
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    field: 'quantity'
-  },
-  imageUrl: {
+  phoneNumber: {
     type: DataTypes.STRING,
-    field: 'imageUrl'
+    allowNull: true,
+    field: 'phoneNumber'
   },
   isActive: {
     type: DataTypes.BOOLEAN,
@@ -45,8 +33,8 @@ const Stock = sequelize.define('Stock', {
     field: 'isActive'
   }
 }, {
-  tableName: 'stock',
+  tableName: 'shopDetails',
   timestamps: false
 });
 
-module.exports = Stock;
+module.exports = ShopDetail;

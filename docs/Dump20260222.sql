@@ -252,6 +252,7 @@ CREATE TABLE `stock` (
   `id` int NOT NULL AUTO_INCREMENT,
   `modelId` int NOT NULL,
   `name` varchar(255) NOT NULL,
+  `itemCode` varchar(255) DEFAULT NULL,
   `color` varchar(255) NOT NULL,
   `sellingAmount` double DEFAULT NULL,
   `quantity` int DEFAULT NULL,
@@ -269,7 +270,7 @@ CREATE TABLE `stock` (
 
 LOCK TABLES `stock` WRITE;
 /*!40000 ALTER TABLE `stock` DISABLE KEYS */;
-INSERT INTO `stock` VALUES (1,1,'Duke 200','Black',50000,10,NULL,1),(2,1,'Duke 160','Black',50000,10,NULL,1),(3,2,'Mt-15','Black',50000,10,NULL,1),(4,2,'R15','Black',50000,10,NULL,1);
+INSERT INTO `stock` VALUES (1,1,'Duke 200',NULL,'Black',50000,10,NULL,1),(2,1,'Duke 160',NULL,'Black',50000,10,NULL,1),(3,2,'Mt-15',NULL,'Black',50000,10,NULL,1),(4,2,'R15',NULL,'Black',50000,10,NULL,1);
 /*!40000 ALTER TABLE `stock` ENABLE KEYS */;
 UNLOCK TABLES;
 

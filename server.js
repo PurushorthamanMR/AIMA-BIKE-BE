@@ -30,6 +30,8 @@ app.use('/payment', require('./routes/paymentRoutes'));
 app.use('/cash', require('./routes/cashRoutes'));
 app.use('/lease', require('./routes/leaseRoutes'));
 app.use('/customer', require('./routes/customerRoutes'));
+app.use('/dealerConsignmentNote', require('./routes/dealerConsignmentNoteRoutes'));
+app.use('/shopDetails', require('./routes/shopDetailsRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -23,6 +23,26 @@ class LeaseService {
     return this.transformToDto(lease);
   }
 
+  async saveWithTransaction(leaseDto, transaction) {
+    const lease = await Lease.create(
+      {
+        customerId: leaseDto.customerId ?? leaseDto.customer?.id,
+        companyName: leaseDto.companyName ?? null,
+        purchaseOrderNumber: leaseDto.purchaseOrderNumber ?? null,
+        copyOfNic: leaseDto.copyOfNic ?? null,
+        photographOne: leaseDto.photographOne ?? null,
+        photographTwo: leaseDto.photographTwo ?? null,
+        paymentReceipt: leaseDto.paymentReceipt ?? null,
+        mta2: leaseDto.mta2 ?? null,
+        mta3: leaseDto.mta3 ?? null,
+        chequeNumber: leaseDto.chequeNumber ?? null,
+        isActive: leaseDto.isActive !== undefined ? leaseDto.isActive : true
+      },
+      { transaction }
+    );
+    return this.transformToDto(lease);
+  }
+
   async update(leaseDto) {
     logger.info('LeaseService.update() invoked');
 
