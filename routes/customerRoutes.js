@@ -113,15 +113,18 @@ router.get('/getByPayment', authenticateToken, authorize('ADMIN', 'MANAGER', 'ST
 });
 
 /**
- * Get customers by customer status (e.g. pending, complete, return)
- * GET /customer/getByCustomerStatus?status=pending
+ * Get customers by customer status (e.g. pending, complete, return) with pagination
+ * GET /customer/getByCustomerStatus?status=pending&pageNumber=1&pageSize=10&isActive=true
  */
 router.get('/getByCustomerStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
   try {
     logger.info('CustomerController.getByCustomerStatus() invoked');
     const status = req.query.status;
-    const list = await customerService.getByCustomerStatus(status);
-    res.json(responseUtil.getServiceResponse(list));
+    const pageNumber = parseInt(req.query.pageNumber) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+    const result = await customerService.getByCustomerStatus(status, pageNumber, pageSize, isActive);
+    res.json(responseUtil.getServiceResponse(result));
   } catch (error) {
     logger.error('Error retrieving customer by status:', error);
     res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving customer by status', 500));

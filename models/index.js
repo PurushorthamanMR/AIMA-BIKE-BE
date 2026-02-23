@@ -11,7 +11,6 @@ const Cash = require('./Cash');
 const Lease = require('./Lease');
 const Customer = require('./Customer');
 const DealerConsignmentNote = require('./DealerConsignmentNote');
-const DealerConsignmentNoteItem = require('./DealerConsignmentNoteItem');
 const ShopDetail = require('./ShopDetail');
 const Courier = require('./Courier');
 const Transfer = require('./Transfer');
@@ -42,12 +41,8 @@ Cash.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
 Customer.hasMany(Lease, { foreignKey: 'customerId', as: 'lease' });
 Lease.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
 
-DealerConsignmentNote.hasMany(DealerConsignmentNoteItem, { foreignKey: 'noteId', as: 'items' });
-DealerConsignmentNoteItem.belongsTo(DealerConsignmentNote, { foreignKey: 'noteId', as: 'note' });
-DealerConsignmentNoteItem.belongsTo(Model, { foreignKey: 'modelId', as: 'model' });
-Model.hasMany(DealerConsignmentNoteItem, { foreignKey: 'modelId', as: 'dealerConsignmentNoteItems' });
-Stock.hasMany(DealerConsignmentNoteItem, { foreignKey: 'stockId', as: 'dealerConsignmentNoteItems' });
-DealerConsignmentNoteItem.belongsTo(Stock, { foreignKey: 'stockId', as: 'stock' });
+DealerConsignmentNote.hasMany(Stock, { foreignKey: 'noteId', as: 'items' });
+Stock.belongsTo(DealerConsignmentNote, { foreignKey: 'noteId', as: 'note' });
 
 Category.hasMany(Courier, { foreignKey: 'categoryId', as: 'couriers' });
 Courier.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
@@ -73,7 +68,6 @@ module.exports = {
   Lease,
   Customer,
   DealerConsignmentNote,
-  DealerConsignmentNoteItem,
   ShopDetail,
   Courier,
   Transfer

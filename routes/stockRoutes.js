@@ -22,20 +22,20 @@ router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), 
 
 /**
  * Get all stock with pagination
- * GET /stock/getAllPage?pageNumber=1&pageSize=10&status=true&name=...&color=...&modelId=...
+ * GET /stock/getAllPage?pageNumber=1&pageSize=10&noteId=...&color=...&modelId=...&itemCode=...
  */
 router.get('/getAllPage', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
   try {
     logger.info('StockController.getAllPage() invoked');
     const pageNumber = parseInt(req.query.pageNumber) || 1;
     const pageSize = parseInt(req.query.pageSize) || 10;
-    const status = req.query.status !== undefined ? req.query.status === 'true' : undefined;
     const searchParams = {};
-    if (req.query.name) searchParams.name = req.query.name;
+    if (req.query.noteId != null) searchParams.noteId = parseInt(req.query.noteId);
     if (req.query.color) searchParams.color = req.query.color;
     if (req.query.modelId != null) searchParams.modelId = parseInt(req.query.modelId);
+    if (req.query.itemCode) searchParams.itemCode = req.query.itemCode;
 
-    const result = await stockService.getAllPage(pageNumber, pageSize, status, searchParams);
+    const result = await stockService.getAllPage(pageNumber, pageSize, searchParams);
     res.json(responseUtil.getServiceResponse(result));
   } catch (error) {
     logger.error('Error retrieving stock:', error);
@@ -44,7 +44,23 @@ router.get('/getAllPage', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAF
 });
 
 /**
- * Get stock by name
+ * Get stock by note ID
+ * GET /stock/getByNoteId?noteId=1
+ */
+router.get('/getByNoteId', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('StockController.getByNoteId() invoked');
+    const noteId = parseInt(req.query.noteId);
+    const stocks = await stockService.getByNoteId(noteId);
+    res.json(responseUtil.getServiceResponse(stocks));
+  } catch (error) {
+    logger.error('Error retrieving stock by note:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving stock by note', 500));
+  }
+});
+
+/**
+ * Get stock by name (searches itemCode)
  * GET /stock/getByName?name=...
  */
 router.get('/getByName', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
@@ -107,27 +123,6 @@ router.post('/update', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF')
     } else {
       res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error updating stock', 500));
     }
-  }
-});
-
-/**
- * Update stock status
- * PUT /stock/updateStatus?stockId=1&status=true
- */
-router.put('/updateStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
-  try {
-    logger.info('StockController.updateStatus() invoked');
-    const stockId = parseInt(req.query.stockId);
-    const status = req.query.status === 'true';
-    const stockDto = await stockService.updateStatus(stockId, status);
-    if (stockDto) {
-      res.json(responseUtil.getServiceResponse(stockDto));
-    } else {
-      res.status(404).json(responseUtil.getErrorServiceResponse('Stock not found', 404));
-    }
-  } catch (error) {
-    logger.error('Error updating stock status:', error);
-    res.status(500).json(responseUtil.getErrorServiceResponse('Error updating stock status', 500));
   }
 });
 

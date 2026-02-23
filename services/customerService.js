@@ -199,21 +199,39 @@ class CustomerService {
     return list.map(c => this.transformToDto(c));
   }
 
-  async getByCustomerStatus(customerStatus) {
+  /**
+   * Get customers by workflow status (pending|complete|return) with pagination and optional isActive filter.
+   * GET /customer/getByCustomerStatus?status=pending&pageNumber=1&pageSize=10&isActive=true
+   */
+  async getByCustomerStatus(customerStatus, pageNumber = 1, pageSize = 10, isActive) {
     logger.info('CustomerService.getByCustomerStatus() invoked');
 
     const where = {};
     if (customerStatus != null && customerStatus !== '') {
       where.status = customerStatus;
     }
+    if (isActive !== undefined && isActive !== null) {
+      where.isActive = isActive;
+    }
 
-    const list = await Customer.findAll({
+    const offset = (pageNumber - 1) * pageSize;
+
+    const { count, rows } = await Customer.findAndCountAll({
       where,
       include: defaultInclude,
+      limit: pageSize,
+      offset,
       order: [['id', 'ASC']]
     });
 
-    return list.map(c => this.transformToDto(c));
+    const content = rows.map(c => this.transformToDto(c));
+    return {
+      content,
+      totalElements: count,
+      totalPages: Math.ceil(count / pageSize),
+      pageNumber,
+      pageSize
+    };
   }
 
   async update(customerDto) {
@@ -273,7 +291,7 @@ class CustomerService {
   }
 
   /**
-   * Approve customer: set status = 'complete'.
+   * Approve customer: set status = 'complete', and set balancePaymentDate and dateOfDelivery to today.
    * POST /customer/approved?customerId=1
    */
   async approve(customerId) {
@@ -284,7 +302,12 @@ class CustomerService {
       return null;
     }
 
-    await customer.update({ status: 'complete' });
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD for DATEONLY
+    await customer.update({
+      status: 'complete',
+      balancePaymentDate: today,
+      dateOfDelivery: today
+    });
 
     const updated = await Customer.findByPk(customerId, { include: defaultInclude });
     return this.transformToDto(updated);

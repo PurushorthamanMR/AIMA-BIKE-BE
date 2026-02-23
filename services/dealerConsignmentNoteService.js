@@ -1,13 +1,12 @@
 const { Op } = require('sequelize');
 const {
   DealerConsignmentNote,
-  DealerConsignmentNoteItem,
+  Stock,
   Model,
   Category
 } = require('../models');
 const { sequelize } = require('../config/database');
 const logger = require('../config/logger');
-const stockService = require('./stockService');
 
 const itemInclude = [
   { model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }
@@ -16,7 +15,7 @@ const itemInclude = [
 function getNoteInclude() {
   return [
     {
-      model: DealerConsignmentNoteItem,
+      model: Stock,
       as: 'items',
       include: itemInclude
     }
@@ -47,11 +46,10 @@ class DealerConsignmentNoteService {
 
       const items = Array.isArray(dto.items) ? dto.items : [];
       if (items.length > 0) {
-        await DealerConsignmentNoteItem.bulkCreate(
+        await Stock.bulkCreate(
           items.map((item) => ({
             noteId: note.id,
             modelId: item.modelId,
-            stockId: item.stockId ?? null,
             itemCode: item.itemCode ?? null,
             chassisNumber: item.chassisNumber ?? null,
             motorNumber: item.motorNumber ?? null,
@@ -60,19 +58,6 @@ class DealerConsignmentNoteService {
           })),
           { transaction }
         );
-        // Increase stock quantity for each consignment item
-        for (const item of items) {
-          const qty = item.quantity ?? 1;
-          if (item.stockId != null) {
-            await stockService.addQuantityByStockId(item.stockId, qty, { transaction });
-          } else {
-            await stockService.addQuantityByModelOrCreate(item.modelId, qty, {
-              color: item.color || undefined,
-              itemCode: item.itemCode || undefined,
-              transaction
-            });
-          }
-        }
       }
 
       await transaction.commit();
@@ -192,18 +177,17 @@ class DealerConsignmentNoteService {
         { transaction }
       );
 
-      await DealerConsignmentNoteItem.destroy({
+      await Stock.destroy({
         where: { noteId: note.id },
         transaction
       });
 
       const items = Array.isArray(dto.items) ? dto.items : [];
       if (items.length > 0) {
-        await DealerConsignmentNoteItem.bulkCreate(
+        await Stock.bulkCreate(
           items.map((item) => ({
             noteId: note.id,
             modelId: item.modelId,
-            stockId: item.stockId ?? null,
             itemCode: item.itemCode ?? null,
             chassisNumber: item.chassisNumber ?? null,
             motorNumber: item.motorNumber ?? null,
@@ -248,7 +232,6 @@ class DealerConsignmentNoteService {
       id: item.id,
       noteId: item.noteId,
       modelId: item.modelId,
-      stockId: item.stockId,
       itemCode: item.itemCode,
       chassisNumber: item.chassisNumber,
       motorNumber: item.motorNumber,

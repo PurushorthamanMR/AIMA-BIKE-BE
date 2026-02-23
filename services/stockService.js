@@ -2,56 +2,50 @@ const { Op } = require('sequelize');
 const { Stock, Model, Category } = require('../models');
 const logger = require('../config/logger');
 
+const defaultInclude = [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }];
+
 class StockService {
   async save(stockDto) {
     logger.info('StockService.save() invoked');
 
+    const noteId = stockDto.noteId ?? stockDto.note?.id;
+    if (noteId == null) {
+      throw new Error('noteId is required to save stock. Use POST /dealerConsignmentNote/save to create stock (note + items).');
+    }
     const stock = await Stock.create({
+      noteId,
       modelId: stockDto.modelId ?? stockDto.model?.id,
-      name: stockDto.name,
       itemCode: stockDto.itemCode ?? null,
-      color: stockDto.color,
-      sellingAmount: stockDto.sellingAmount ?? null,
-      quantity: stockDto.quantity ?? 0,
-      imageUrl: stockDto.imageUrl ?? null,
-      isActive: stockDto.isActive !== undefined ? stockDto.isActive : true
+      chassisNumber: stockDto.chassisNumber ?? null,
+      motorNumber: stockDto.motorNumber ?? null,
+      color: stockDto.color ?? null,
+      quantity: stockDto.quantity ?? 1
     });
 
-    const withModel = await Stock.findByPk(stock.id, {
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
-    });
+    const withModel = await Stock.findByPk(stock.id, { include: defaultInclude });
     return this.transformToDto(withModel);
   }
 
-  async getAllPage(pageNumber, pageSize, status, searchParams) {
+  async getAllPage(pageNumber, pageSize, searchParams) {
     logger.info('StockService.getAllPage() invoked');
 
     const where = {};
-    if (status !== undefined && status !== null) {
-      where.isActive = status;
-    }
-    if (searchParams?.name) {
-      where.name = { [Op.like]: `%${searchParams.name}%` };
-    }
-    if (searchParams?.color) {
-      where.color = { [Op.like]: `%${searchParams.color}%` };
-    }
-    if (searchParams?.modelId != null) {
-      where.modelId = searchParams.modelId;
-    }
+    if (searchParams?.noteId != null) where.noteId = searchParams.noteId;
+    if (searchParams?.modelId != null) where.modelId = searchParams.modelId;
+    if (searchParams?.color) where.color = { [Op.like]: `%${searchParams.color}%` };
+    if (searchParams?.itemCode) where.itemCode = { [Op.like]: `%${searchParams.itemCode}%` };
 
     const offset = (pageNumber - 1) * pageSize;
 
     const { count, rows } = await Stock.findAndCountAll({
       where,
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      include: defaultInclude,
       limit: pageSize,
-      offset: offset,
+      offset,
       order: [['id', 'ASC']]
     });
 
-    const content = rows.map(s => this.transformToDto(s));
-
+    const content = rows.map((s) => this.transformToDto(s));
     return {
       content,
       totalElements: count,
@@ -61,50 +55,47 @@ class StockService {
     };
   }
 
-  async getByName(name) {
-    logger.info('StockService.getByName() invoked');
-
-    const where = {};
-    if (name) {
-      where.name = { [Op.like]: `%${name}%` };
-    }
+  async getByNoteId(noteId) {
+    logger.info('StockService.getByNoteId() invoked');
 
     const stocks = await Stock.findAll({
-      where,
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      where: { noteId },
+      include: defaultInclude,
       order: [['id', 'ASC']]
     });
+    return stocks.map((s) => this.transformToDto(s));
+  }
 
-    return stocks.map(s => this.transformToDto(s));
+  async getByName(name) {
+    logger.info('StockService.getByName() invoked');
+    const where = name ? { itemCode: { [Op.like]: `%${name}%` } } : {};
+    const stocks = await Stock.findAll({
+      where,
+      include: defaultInclude,
+      order: [['id', 'ASC']]
+    });
+    return stocks.map((s) => this.transformToDto(s));
   }
 
   async getByColor(color) {
     logger.info('StockService.getByColor() invoked');
-
-    const where = {};
-    if (color) {
-      where.color = { [Op.like]: `%${color}%` };
-    }
-
+    const where = color ? { color: { [Op.like]: `%${color}%` } } : {};
     const stocks = await Stock.findAll({
       where,
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      include: defaultInclude,
       order: [['id', 'ASC']]
     });
-
-    return stocks.map(s => this.transformToDto(s));
+    return stocks.map((s) => this.transformToDto(s));
   }
 
   async getByModel(modelId) {
     logger.info('StockService.getByModel() invoked');
-
     const stocks = await Stock.findAll({
-      where: { modelId, isActive: true },
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }],
+      where: { modelId },
+      include: defaultInclude,
       order: [['id', 'ASC']]
     });
-
-    return stocks.map(s => this.transformToDto(s));
+    return stocks.map((s) => this.transformToDto(s));
   }
 
   async update(stockDto) {
@@ -115,51 +106,37 @@ class StockService {
       throw new Error('Stock not found');
     }
 
-    const updateData = {
-      name: stockDto.name,
-      color: stockDto.color,
-      isActive: stockDto.isActive !== undefined ? stockDto.isActive : stock.isActive
-    };
+    const updateData = {};
+    if (stockDto.noteId != null) updateData.noteId = stockDto.noteId;
     if (stockDto.modelId != null) updateData.modelId = stockDto.modelId;
     if (stockDto.itemCode !== undefined) updateData.itemCode = stockDto.itemCode;
-    if (stockDto.sellingAmount !== undefined) updateData.sellingAmount = stockDto.sellingAmount;
+    if (stockDto.chassisNumber !== undefined) updateData.chassisNumber = stockDto.chassisNumber;
+    if (stockDto.motorNumber !== undefined) updateData.motorNumber = stockDto.motorNumber;
+    if (stockDto.color !== undefined) updateData.color = stockDto.color;
     if (stockDto.quantity !== undefined) updateData.quantity = stockDto.quantity;
-    if (stockDto.imageUrl !== undefined) updateData.imageUrl = stockDto.imageUrl;
 
     await stock.update(updateData);
 
-    const updated = await Stock.findByPk(stock.id, {
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
-    });
+    const updated = await Stock.findByPk(stock.id, { include: defaultInclude });
     return this.transformToDto(updated);
   }
 
-  async updateStatus(stockId, status) {
-    logger.info('StockService.updateStatus() invoked');
+  async updateQuantity(stockId, quantityToAdd) {
+    logger.info('StockService.updateQuantity() invoked');
 
     const stock = await Stock.findByPk(stockId);
-    if (!stock) {
-      return null;
-    }
+    if (!stock) return null;
 
-    await stock.update({ isActive: status });
+    const currentQuantity = stock.quantity ?? 0;
+    const newQuantity = currentQuantity + quantityToAdd;
+    await stock.update({ quantity: newQuantity });
 
-    const updated = await Stock.findByPk(stockId, {
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
-    });
+    const updated = await Stock.findByPk(stockId, { include: defaultInclude });
     return this.transformToDto(updated);
   }
 
-  /**
-   * Reduce stock quantity by model (and optional color/itemCode).
-   * Used when saving dealer consignment note items or customer (sale).
-   * @param {number} modelId - Model ID
-   * @param {number} quantityToReduce - Quantity to deduct
-   * @param {Object} options - { color?, itemCode?, transaction? }
-   * @returns {Object} Updated stock row
-   */
   async reduceQuantityByModel(modelId, quantityToReduce, options = {}) {
-    const where = { modelId, isActive: true };
+    const where = { modelId };
     if (options.color != null && options.color !== '') where.color = options.color;
     if (options.itemCode != null && options.itemCode !== '') where.itemCode = options.itemCode;
 
@@ -183,13 +160,6 @@ class StockService {
     return stock;
   }
 
-  /**
-   * Reduce stock quantity by stock ID (used when saving a transfer).
-   * @param {number} stockId - Stock ID (PK)
-   * @param {number} quantityToReduce - Quantity to deduct
-   * @param {Object} options - { transaction? }
-   * @returns {Object} Updated stock row
-   */
   async reduceQuantityByStockId(stockId, quantityToReduce, options = {}) {
     if (quantityToReduce == null || quantityToReduce <= 0) return null;
 
@@ -197,9 +167,7 @@ class StockService {
     if (options.transaction) findOpts.transaction = options.transaction;
 
     const stock = await Stock.findByPk(stockId, findOpts);
-    if (!stock) {
-      throw new Error(`Stock with id ${stockId} not found`);
-    }
+    if (!stock) throw new Error(`Stock with id ${stockId} not found`);
 
     const current = stock.quantity ?? 0;
     if (current < quantityToReduce) {
@@ -212,16 +180,8 @@ class StockService {
     return stock;
   }
 
-  /**
-   * Add quantity to stock by model (and optional color/itemCode).
-   * Used when customer is returned to restore stock.quantity.
-   * @param {number} modelId - Model ID
-   * @param {number} quantityToAdd - Quantity to add
-   * @param {Object} options - { color?, itemCode?, transaction? }
-   * @returns {Object} Updated stock row
-   */
   async addQuantityByModel(modelId, quantityToAdd, options = {}) {
-    const where = { modelId, isActive: true };
+    const where = { modelId };
     if (options.color != null && options.color !== '') where.color = options.color;
     if (options.itemCode != null && options.itemCode !== '') where.itemCode = options.itemCode;
 
@@ -241,55 +201,6 @@ class StockService {
     return stock;
   }
 
-  /**
-   * Add quantity to stock by model (and optional color/itemCode).
-   * If no matching stock exists, creates one so consignment note save can succeed.
-   * @param {number} modelId - Model ID
-   * @param {number} quantityToAdd - Quantity to add
-   * @param {Object} options - { color?, itemCode?, transaction? }
-   * @returns {Object} Updated or newly created stock row
-   */
-  async addQuantityByModelOrCreate(modelId, quantityToAdd, options = {}) {
-    const where = { modelId, isActive: true };
-    if (options.color != null && options.color !== '') where.color = options.color;
-    if (options.itemCode != null && options.itemCode !== '') where.itemCode = options.itemCode;
-
-    const findOpts = { where, order: [['id', 'ASC']] };
-    if (options.transaction) findOpts.transaction = options.transaction;
-
-    const stocks = await Stock.findAll(findOpts);
-    if (stocks.length > 0) {
-      const stock = stocks[0];
-      const current = stock.quantity ?? 0;
-      const updateOpts = {};
-      if (options.transaction) updateOpts.transaction = options.transaction;
-      await stock.update({ quantity: current + quantityToAdd }, updateOpts);
-      return stock;
-    }
-
-    const modelOpts = options.transaction ? { transaction: options.transaction } : {};
-    const model = await Model.findByPk(modelId, modelOpts);
-    if (!model) {
-      throw new Error(`Model with id ${modelId} not found; cannot create stock`);
-    }
-    const name = model.name && options.color
-      ? `${model.name} - ${options.color}`
-      : `Stock ${modelId}${options.color ? ` ${options.color}` : ''}`;
-    const createData = { modelId, name, color: options.color || 'N/A', quantity: quantityToAdd ?? 0 };
-    if (options.itemCode != null && options.itemCode !== '') createData.itemCode = options.itemCode;
-    const createOpts = options.transaction ? { transaction: options.transaction } : {};
-    const stock = await Stock.create(createData, createOpts);
-    return stock;
-  }
-
-  /**
-   * Add quantity to stock by stock ID (with optional transaction).
-   * Used when saving dealer consignment note items with stockId.
-   * @param {number} stockId - Stock ID (PK)
-   * @param {number} quantityToAdd - Quantity to add
-   * @param {Object} options - { transaction? }
-   * @returns {Object} Updated stock row
-   */
   async addQuantityByStockId(stockId, quantityToAdd, options = {}) {
     if (quantityToAdd == null || quantityToAdd <= 0) return null;
 
@@ -297,9 +208,7 @@ class StockService {
     if (options.transaction) findOpts.transaction = options.transaction;
 
     const stock = await Stock.findByPk(stockId, findOpts);
-    if (!stock) {
-      throw new Error(`Stock with id ${stockId} not found`);
-    }
+    if (!stock) throw new Error(`Stock with id ${stockId} not found`);
 
     const current = stock.quantity ?? 0;
     const updateOpts = {};
@@ -308,40 +217,17 @@ class StockService {
     return stock;
   }
 
-  /**
-   * Add quantity to current stock (e.g. current 50 + 50 => 100)
-   */
-  async updateQuantity(stockId, quantityToAdd) {
-    logger.info('StockService.updateQuantity() invoked');
-
-    const stock = await Stock.findByPk(stockId);
-    if (!stock) {
-      return null;
-    }
-
-    const currentQuantity = stock.quantity ?? 0;
-    const newQuantity = currentQuantity + quantityToAdd;
-
-    await stock.update({ quantity: newQuantity });
-
-    const updated = await Stock.findByPk(stockId, {
-      include: [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }]
-    });
-    return this.transformToDto(updated);
-  }
-
   transformToDto(stock) {
     if (!stock) return null;
     return {
       id: stock.id,
+      noteId: stock.noteId,
       modelId: stock.modelId,
-      name: stock.name,
       itemCode: stock.itemCode,
+      chassisNumber: stock.chassisNumber,
+      motorNumber: stock.motorNumber,
       color: stock.color,
-      sellingAmount: stock.sellingAmount,
       quantity: stock.quantity,
-      imageUrl: stock.imageUrl,
-      isActive: stock.isActive,
       modelDto: stock.model
         ? {
             id: stock.model.id,
