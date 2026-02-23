@@ -17,6 +17,12 @@ const DealerConsignmentNoteItem = sequelize.define('DealerConsignmentNoteItem', 
     allowNull: false,
     field: 'modelId'
   },
+  stockId: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    field: 'stockId',
+    references: { model: 'stock', key: 'id' }
+  },
   itemCode: {
     type: DataTypes.STRING,
     allowNull: true,

@@ -1,0 +1,147 @@
+const express = require('express');
+const router = express.Router();
+const courierService = require('../services/courierService');
+const responseUtil = require('../utils/responseUtil');
+const { authenticateToken, authorize } = require('../middleware/authMiddleware');
+const logger = require('../config/logger');
+
+/**
+ * Save a new courier
+ * POST /courier/save
+ */
+router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.save() invoked');
+    const dto = await courierService.save(req.body);
+    res.json(responseUtil.getServiceResponse(dto));
+  } catch (error) {
+    logger.error('Error saving courier:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error saving courier', 500));
+  }
+});
+
+/**
+ * Mark courier as received: save only receivedDate, receivername, nic
+ * POST /courier/received
+ * Body: { courierId (or id), receivedDate, receivername, nic }
+ */
+router.post('/received', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.received() invoked');
+    const dto = await courierService.received(req.body);
+    if (dto) {
+      res.json(responseUtil.getServiceResponse(dto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Courier not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error updating courier received:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error updating courier received', 500));
+  }
+});
+
+/**
+ * Update courier
+ * POST /courier/update
+ */
+router.post('/update', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.update() invoked');
+    const dto = await courierService.update(req.body);
+    res.json(responseUtil.getServiceResponse(dto));
+  } catch (error) {
+    logger.error('Error updating courier:', error);
+    if (error.message === 'Courier not found') {
+      res.status(404).json(responseUtil.getErrorServiceResponse(error.message, 404));
+    } else {
+      res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error updating courier', 500));
+    }
+  }
+});
+
+/**
+ * Update courier status
+ * PUT /courier/updateStatus?courierId=1&status=true
+ */
+router.put('/updateStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.updateStatus() invoked');
+    const courierId = parseInt(req.query.courierId);
+    const status = req.query.status === 'true';
+    const dto = await courierService.updateStatus(courierId, status);
+    if (dto) {
+      res.json(responseUtil.getServiceResponse(dto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Courier not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error updating courier status:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error updating courier status', 500));
+  }
+});
+
+/**
+ * Get couriers by category ID
+ * GET /courier/getByCategoryId?categoryId=1
+ */
+router.get('/getByCategoryId', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getByCategoryId() invoked');
+    const categoryId = parseInt(req.query.categoryId);
+    const list = await courierService.getByCategoryId(categoryId);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving couriers by category:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving couriers by category', 500));
+  }
+});
+
+/**
+ * Get couriers by customer ID
+ * GET /courier/getByCustomerId?customerId=1
+ */
+router.get('/getByCustomerId', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getByCustomerId() invoked');
+    const customerId = parseInt(req.query.customerId);
+    const list = await courierService.getByCustomerId(customerId);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving couriers by customer:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving couriers by customer', 500));
+  }
+});
+
+/**
+ * Get couriers by name
+ * GET /courier/getByName?name=...
+ */
+router.get('/getByName', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getByName() invoked');
+    const name = req.query.name;
+    const list = await courierService.getByName(name);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving couriers by name:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving couriers by name', 500));
+  }
+});
+
+/**
+ * Get couriers by receiver name
+ * GET /courier/getByReceiverName?receivername=...
+ */
+router.get('/getByReceiverName', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getByReceiverName() invoked');
+    const receivername = req.query.receivername;
+    const list = await courierService.getByReceiverName(receivername);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving couriers by receiver name:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving couriers by receiver name', 500));
+  }
+});
+
+module.exports = router;

@@ -33,7 +33,9 @@ CREATE TABLE `cash` (
   `slip` varchar(255) DEFAULT NULL,
   `chequeNumber` int DEFAULT NULL,
   `isActive` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `customerId` (`customerId`),
+  CONSTRAINT `cash_ibfk_1` FOREIGN KEY (`customerId`) REFERENCES `customer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -43,7 +45,7 @@ CREATE TABLE `cash` (
 
 LOCK TABLES `cash` WRITE;
 /*!40000 ALTER TABLE `cash` DISABLE KEYS */;
-INSERT INTO `cash` VALUES (1,2,'https://example.com/nic.pdf','https://example.com/photo1.jpg','https://example.com/photo2.jpg','https://example.com/receipt.pdf','https://example.com/mta2.pdf','https://example.com/slip.pdf',NULL,1);
+INSERT INTO `cash` VALUES (1,1,'https://example.com/nic.pdf','https://example.com/photo1.jpg','https://example.com/photo2.jpg','https://example.com/receipt.pdf','https://example.com/mta2.pdf','https://example.com/slip.pdf',NULL,1);
 /*!40000 ALTER TABLE `cash` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -70,6 +72,43 @@ LOCK TABLES `category` WRITE;
 /*!40000 ALTER TABLE `category` DISABLE KEYS */;
 INSERT INTO `category` VALUES (1,'Bikes',1),(2,'Parts',1),(3,'Services',1);
 /*!40000 ALTER TABLE `category` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `courier`
+--
+
+DROP TABLE IF EXISTS `courier`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `courier` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `categoryId` int NOT NULL,
+  `customerId` int NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `contactNumber` int DEFAULT NULL,
+  `address` varchar(255) NOT NULL,
+  `sentDate` date DEFAULT NULL,
+  `receivedDate` date DEFAULT NULL,
+  `receivername` varchar(255) DEFAULT NULL,
+  `nic` varchar(255) DEFAULT NULL,
+  `isActive` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `categoryId` (`categoryId`),
+  KEY `customerId` (`customerId`),
+  CONSTRAINT `courier_ibfk_1` FOREIGN KEY (`categoryId`) REFERENCES `category` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `courier_ibfk_2` FOREIGN KEY (`customerId`) REFERENCES `customer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `courier`
+--
+
+LOCK TABLES `courier` WRITE;
+/*!40000 ALTER TABLE `courier` DISABLE KEYS */;
+INSERT INTO `courier` VALUES (1,3,1,'Courier A',771234567,'123 Main St','2025-02-20','2025-02-25','Rajeesh','123456789V',1);
+/*!40000 ALTER TABLE `courier` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -106,12 +145,13 @@ CREATE TABLE `customer` (
   `balancePaymentDate` date DEFAULT NULL,
   `paymentId` int NOT NULL,
   `isActive` tinyint(1) DEFAULT '1',
+  `status` varchar(255) DEFAULT 'pending',
   PRIMARY KEY (`id`),
   KEY `modelId` (`modelId`),
   KEY `paymentId` (`paymentId`),
   CONSTRAINT `customer_ibfk_1` FOREIGN KEY (`modelId`) REFERENCES `model` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `customer_ibfk_2` FOREIGN KEY (`paymentId`) REFERENCES `payment` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -120,7 +160,7 @@ CREATE TABLE `customer` (
 
 LOCK TABLES `customer` WRITE;
 /*!40000 ALTER TABLE `customer` DISABLE KEYS */;
-INSERT INTO `customer` VALUES (1,'Muhila','123 Main St','Northern','Jaffna','Engineer','1990-05-15','Christian',771234567,771234567,'123456789V',1,'CH001','M001','Black','2024-01-10',1001,'2024-01-15',150000,5000,50000,'2026-02-22',100000,NULL,1,1),(2,'Nizmi','456 Oak St','Northern','Jaffna','Teacher','1992-08-20','Buddhist',772345678,772345678,'987654321V',1,'CH002','M002','Red','2024-02-01',1002,'2024-02-05',140000,5000,70000,'2026-02-22',70000,NULL,1,1);
+INSERT INTO `customer` VALUES (1,'Muhila','456 Oak St','Northern','Jaffna','Teacher','1992-08-20','Buddhist',772345678,772345678,'987654321V',1,'CH002','M002','Red','2024-02-01',1002,'2024-02-05',140000,5000,70000,'2026-02-23',70000,NULL,1,1,'pending'),(3,'Nizmi','123 Main St','Northern','Jaffna','Engineer','1990-05-15','Christian',771234567,771234567,'123456789V',1,'CH001','M001','Red','2024-01-10',1001,'2024-01-15',150000,5000,50000,'2026-02-23',100000,NULL,1,1,'pending');
 /*!40000 ALTER TABLE `customer` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -168,12 +208,19 @@ CREATE TABLE `dealerconsignmentnoteitem` (
   `id` int NOT NULL AUTO_INCREMENT,
   `noteId` int NOT NULL,
   `modelId` int NOT NULL,
+  `stockId` int DEFAULT NULL,
   `itemCode` varchar(255) DEFAULT NULL,
   `chassisNumber` varchar(255) DEFAULT NULL,
   `motorNumber` varchar(255) DEFAULT NULL,
   `color` varchar(255) DEFAULT NULL,
   `quantity` int DEFAULT '1',
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  KEY `noteId` (`noteId`),
+  KEY `modelId` (`modelId`),
+  KEY `stockId` (`stockId`),
+  CONSTRAINT `dealerconsignmentnoteitem_ibfk_1` FOREIGN KEY (`noteId`) REFERENCES `dealerconsignmentnote` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `dealerconsignmentnoteitem_ibfk_2` FOREIGN KEY (`modelId`) REFERENCES `model` (`id`) ON UPDATE CASCADE,
+  CONSTRAINT `dealerconsignmentnoteitem_ibfk_3` FOREIGN KEY (`stockId`) REFERENCES `stock` (`id`) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -183,7 +230,7 @@ CREATE TABLE `dealerconsignmentnoteitem` (
 
 LOCK TABLES `dealerconsignmentnoteitem` WRITE;
 /*!40000 ALTER TABLE `dealerconsignmentnoteitem` DISABLE KEYS */;
-INSERT INTO `dealerconsignmentnoteitem` VALUES (1,1,1,'BIKE-001','CH123','MN456','Black',2);
+INSERT INTO `dealerconsignmentnoteitem` VALUES (1,1,1,1,'BIKE-001','CH123','MN456','Red',2);
 /*!40000 ALTER TABLE `dealerconsignmentnoteitem` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -207,8 +254,10 @@ CREATE TABLE `lease` (
   `mta3` varchar(255) DEFAULT NULL,
   `chequeNumber` int DEFAULT NULL,
   `isActive` tinyint(1) DEFAULT '1',
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  PRIMARY KEY (`id`),
+  KEY `customerId` (`customerId`),
+  CONSTRAINT `lease_ibfk_1` FOREIGN KEY (`customerId`) REFERENCES `customer` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -217,7 +266,7 @@ CREATE TABLE `lease` (
 
 LOCK TABLES `lease` WRITE;
 /*!40000 ALTER TABLE `lease` DISABLE KEYS */;
-INSERT INTO `lease` VALUES (1,1,'ABC Ltd',1001,'https://example.com/nic.pdf','https://example.com/photo1.jpg','https://example.com/photo2.jpg','https://example.com/receipt.pdf','https://example.com/mta2.pdf','https://example.com/mta3.pdf',NULL,1);
+INSERT INTO `lease` VALUES (2,3,'ABC Ltd',1001,'https://example.com/nic.pdf','https://example.com/photo1.jpg','https://example.com/photo2.jpg','https://example.com/receipt.pdf','https://example.com/mta2.pdf','https://example.com/mta3.pdf',NULL,1);
 /*!40000 ALTER TABLE `lease` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -291,7 +340,7 @@ CREATE TABLE `payment` (
   `name` varchar(255) DEFAULT NULL,
   `isActive` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -300,7 +349,7 @@ CREATE TABLE `payment` (
 
 LOCK TABLES `payment` WRITE;
 /*!40000 ALTER TABLE `payment` DISABLE KEYS */;
-INSERT INTO `payment` VALUES (1,'Cash',1),(2,'Card',1),(3,'Cheque',1);
+INSERT INTO `payment` VALUES (1,'Cash',1),(2,'Card',1);
 /*!40000 ALTER TABLE `payment` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -328,7 +377,7 @@ CREATE TABLE `shopdetails` (
 
 LOCK TABLES `shopdetails` WRITE;
 /*!40000 ALTER TABLE `shopdetails` DISABLE KEYS */;
-INSERT INTO `shopdetails` VALUES (1,'AIMA','https://example.com/logo.png','123 Main St','+94112345678',1);
+INSERT INTO `shopdetails` VALUES (1,'Main Branch','https://example.com/logo.png','123 Main St','+94112345678',1);
 /*!40000 ALTER TABLE `shopdetails` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -352,7 +401,7 @@ CREATE TABLE `stock` (
   PRIMARY KEY (`id`),
   KEY `modelId` (`modelId`),
   CONSTRAINT `stock_ibfk_1` FOREIGN KEY (`modelId`) REFERENCES `model` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -361,8 +410,43 @@ CREATE TABLE `stock` (
 
 LOCK TABLES `stock` WRITE;
 /*!40000 ALTER TABLE `stock` DISABLE KEYS */;
-INSERT INTO `stock` VALUES (1,1,'Duke 200','Du200-Black','Black',50000,10,NULL,1),(2,1,'Duke 160','Du160-Black','Black',50000,10,NULL,1),(3,2,'Mt-15','Mt15-Black','Black',50000,10,NULL,1),(4,2,'R15','R15-Black','Black',50000,10,NULL,1);
+INSERT INTO `stock` VALUES (1,1,'Rc200','Rc200-Red','Red',50000,10,NULL,1),(2,2,'R15','R15-Red','Red',50000,5,NULL,1);
 /*!40000 ALTER TABLE `stock` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `transfer`
+--
+
+DROP TABLE IF EXISTS `transfer`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `transfer` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `stockId` int NOT NULL,
+  `quantity` int DEFAULT NULL,
+  `companyName` varchar(255) NOT NULL,
+  `contactNumber` int DEFAULT NULL,
+  `address` varchar(255) NOT NULL,
+  `userId` int NOT NULL,
+  `deliveryDetails` varchar(255) NOT NULL,
+  `isActive` tinyint(1) DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `stockId` (`stockId`),
+  KEY `userId` (`userId`),
+  CONSTRAINT `transfer_ibfk_1` FOREIGN KEY (`stockId`) REFERENCES `stock` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `transfer_ibfk_2` FOREIGN KEY (`userId`) REFERENCES `user` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `transfer`
+--
+
+LOCK TABLES `transfer` WRITE;
+/*!40000 ALTER TABLE `transfer` DISABLE KEYS */;
+INSERT INTO `transfer` VALUES (1,2,5,'ABC Co',771234567,'123 Main St',1,'Door delivery',1);
+/*!40000 ALTER TABLE `transfer` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -397,7 +481,7 @@ CREATE TABLE `user` (
 
 LOCK TABLES `user` WRITE;
 /*!40000 ALTER TABLE `user` DISABLE KEYS */;
-INSERT INTO `user` VALUES (1,'Prusothaman','MR','$2a$10$xrdc/IycSIPCm.1RmyOtS.oM23MBH/71KwKmoopnxuo8JEzyktPUq','Jaffna','mrprusothaman@gmail.com','+94765947337','2026-02-22 16:58:24',NULL,1,1);
+INSERT INTO `user` VALUES (1,'Prusothaman','MR','$2a$10$26yGwZUhyCxMUYkpI7ztceYLsxdj0hCRVU7z9J8BHIvDU4xPvmQoK','Jaffna','mrprusothaman@gmail.com','+94765947337','2026-02-23 10:18:29',NULL,1,1);
 /*!40000 ALTER TABLE `user` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -462,4 +546,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-23  1:57:16
+-- Dump completed on 2026-02-23 15:57:26

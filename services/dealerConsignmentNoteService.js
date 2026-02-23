@@ -51,6 +51,7 @@ class DealerConsignmentNoteService {
           items.map((item) => ({
             noteId: note.id,
             modelId: item.modelId,
+            stockId: item.stockId ?? null,
             itemCode: item.itemCode ?? null,
             chassisNumber: item.chassisNumber ?? null,
             motorNumber: item.motorNumber ?? null,
@@ -59,14 +60,18 @@ class DealerConsignmentNoteService {
           })),
           { transaction }
         );
-        // Reduce stock quantity for each consignment item
+        // Increase stock quantity for each consignment item
         for (const item of items) {
           const qty = item.quantity ?? 1;
-          await stockService.reduceQuantityByModel(item.modelId, qty, {
-            color: item.color || undefined,
-            itemCode: item.itemCode || undefined,
-            transaction
-          });
+          if (item.stockId != null) {
+            await stockService.addQuantityByStockId(item.stockId, qty, { transaction });
+          } else {
+            await stockService.addQuantityByModelOrCreate(item.modelId, qty, {
+              color: item.color || undefined,
+              itemCode: item.itemCode || undefined,
+              transaction
+            });
+          }
         }
       }
 
@@ -198,6 +203,7 @@ class DealerConsignmentNoteService {
           items.map((item) => ({
             noteId: note.id,
             modelId: item.modelId,
+            stockId: item.stockId ?? null,
             itemCode: item.itemCode ?? null,
             chassisNumber: item.chassisNumber ?? null,
             motorNumber: item.motorNumber ?? null,
@@ -242,6 +248,7 @@ class DealerConsignmentNoteService {
       id: item.id,
       noteId: item.noteId,
       modelId: item.modelId,
+      stockId: item.stockId,
       itemCode: item.itemCode,
       chassisNumber: item.chassisNumber,
       motorNumber: item.motorNumber,

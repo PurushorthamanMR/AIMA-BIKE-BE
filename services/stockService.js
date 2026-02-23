@@ -184,6 +184,35 @@ class StockService {
   }
 
   /**
+   * Reduce stock quantity by stock ID (used when saving a transfer).
+   * @param {number} stockId - Stock ID (PK)
+   * @param {number} quantityToReduce - Quantity to deduct
+   * @param {Object} options - { transaction? }
+   * @returns {Object} Updated stock row
+   */
+  async reduceQuantityByStockId(stockId, quantityToReduce, options = {}) {
+    if (quantityToReduce == null || quantityToReduce <= 0) return null;
+
+    const findOpts = {};
+    if (options.transaction) findOpts.transaction = options.transaction;
+
+    const stock = await Stock.findByPk(stockId, findOpts);
+    if (!stock) {
+      throw new Error(`Stock with id ${stockId} not found`);
+    }
+
+    const current = stock.quantity ?? 0;
+    if (current < quantityToReduce) {
+      throw new Error(`Insufficient stock: required ${quantityToReduce}, available ${current} (stockId ${stockId})`);
+    }
+
+    const updateOpts = {};
+    if (options.transaction) updateOpts.transaction = options.transaction;
+    await stock.update({ quantity: current - quantityToReduce }, updateOpts);
+    return stock;
+  }
+
+  /**
    * Add quantity to stock by model (and optional color/itemCode).
    * Used when customer is returned to restore stock.quantity.
    * @param {number} modelId - Model ID
@@ -205,6 +234,73 @@ class StockService {
     }
 
     const stock = stocks[0];
+    const current = stock.quantity ?? 0;
+    const updateOpts = {};
+    if (options.transaction) updateOpts.transaction = options.transaction;
+    await stock.update({ quantity: current + quantityToAdd }, updateOpts);
+    return stock;
+  }
+
+  /**
+   * Add quantity to stock by model (and optional color/itemCode).
+   * If no matching stock exists, creates one so consignment note save can succeed.
+   * @param {number} modelId - Model ID
+   * @param {number} quantityToAdd - Quantity to add
+   * @param {Object} options - { color?, itemCode?, transaction? }
+   * @returns {Object} Updated or newly created stock row
+   */
+  async addQuantityByModelOrCreate(modelId, quantityToAdd, options = {}) {
+    const where = { modelId, isActive: true };
+    if (options.color != null && options.color !== '') where.color = options.color;
+    if (options.itemCode != null && options.itemCode !== '') where.itemCode = options.itemCode;
+
+    const findOpts = { where, order: [['id', 'ASC']] };
+    if (options.transaction) findOpts.transaction = options.transaction;
+
+    const stocks = await Stock.findAll(findOpts);
+    if (stocks.length > 0) {
+      const stock = stocks[0];
+      const current = stock.quantity ?? 0;
+      const updateOpts = {};
+      if (options.transaction) updateOpts.transaction = options.transaction;
+      await stock.update({ quantity: current + quantityToAdd }, updateOpts);
+      return stock;
+    }
+
+    const modelOpts = options.transaction ? { transaction: options.transaction } : {};
+    const model = await Model.findByPk(modelId, modelOpts);
+    if (!model) {
+      throw new Error(`Model with id ${modelId} not found; cannot create stock`);
+    }
+    const name = model.name && options.color
+      ? `${model.name} - ${options.color}`
+      : `Stock ${modelId}${options.color ? ` ${options.color}` : ''}`;
+    const createData = { modelId, name, color: options.color || 'N/A', quantity: quantityToAdd ?? 0 };
+    if (options.itemCode != null && options.itemCode !== '') createData.itemCode = options.itemCode;
+    const createOpts = options.transaction ? { transaction: options.transaction } : {};
+    const stock = await Stock.create(createData, createOpts);
+    return stock;
+  }
+
+  /**
+   * Add quantity to stock by stock ID (with optional transaction).
+   * Used when saving dealer consignment note items with stockId.
+   * @param {number} stockId - Stock ID (PK)
+   * @param {number} quantityToAdd - Quantity to add
+   * @param {Object} options - { transaction? }
+   * @returns {Object} Updated stock row
+   */
+  async addQuantityByStockId(stockId, quantityToAdd, options = {}) {
+    if (quantityToAdd == null || quantityToAdd <= 0) return null;
+
+    const findOpts = {};
+    if (options.transaction) findOpts.transaction = options.transaction;
+
+    const stock = await Stock.findByPk(stockId, findOpts);
+    if (!stock) {
+      throw new Error(`Stock with id ${stockId} not found`);
+    }
+
     const current = stock.quantity ?? 0;
     const updateOpts = {};
     if (options.transaction) updateOpts.transaction = options.transaction;
