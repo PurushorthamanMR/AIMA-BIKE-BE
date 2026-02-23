@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { Customer, Model, Category, Payment } = require('../models');
+const { Customer, Model, Category, Payment, Cash, Lease } = require('../models');
 const { sequelize } = require('../config/database');
 const cashService = require('./cashService');
 const leaseService = require('./leaseService');
@@ -8,8 +8,11 @@ const logger = require('../config/logger');
 
 const defaultInclude = [
   { model: Model, as: 'model', include: [{ model: Category, as: 'category' }] },
-  { model: Payment, as: 'payment' }
+  { model: Payment, as: 'payment' },
+  { model: Cash, as: 'cash', required: false },
+  { model: Lease, as: 'lease', required: false }
 ];
+
 
 class CustomerService {
   /**
@@ -65,7 +68,8 @@ class CustomerService {
           balancePaymentAmount: customerFields.balancePaymentAmount ?? null,
           balancePaymentDate: customerFields.balancePaymentDate ?? null,
           paymentId: customerFields.paymentId ?? customerFields.payment?.id,
-          isActive: customerFields.isActive !== undefined ? customerFields.isActive : true
+          isActive: customerFields.isActive !== undefined ? customerFields.isActive : true,
+          status: 'pending'
         },
         { transaction }
       );
@@ -251,6 +255,47 @@ class CustomerService {
     return this.transformToDto(updated);
   }
 
+  /**
+   * Approve customer: set status = 'complete'.
+   * POST /customer/approved?customerId=1
+   */
+  async approve(customerId) {
+    logger.info('CustomerService.approve() invoked');
+
+    const customer = await Customer.findByPk(customerId);
+    if (!customer) {
+      return null;
+    }
+
+    await customer.update({ status: 'complete' });
+
+    const updated = await Customer.findByPk(customerId, { include: defaultInclude });
+    return this.transformToDto(updated);
+  }
+
+  /**
+   * Return customer: set status = 'return' and restore stock.quantity by 1 (same modelId + colorOfVehicle).
+   * POST /customer/return?customerId=1
+   */
+  async returnCustomer(customerId) {
+    logger.info('CustomerService.returnCustomer() invoked');
+
+    const customer = await Customer.findByPk(customerId);
+    if (!customer) {
+      return null;
+    }
+
+    await customer.update({ status: 'return' });
+
+    // Restore quantity +1 to the stock that was reduced when customer was created
+    await stockService.addQuantityByModel(customer.modelId, 1, {
+      color: customer.colorOfVehicle || undefined
+    });
+
+    const updated = await Customer.findByPk(customerId, { include: defaultInclude });
+    return this.transformToDto(updated);
+  }
+
   transformToDto(customer) {
     if (!customer) return null;
     return {
@@ -280,6 +325,7 @@ class CustomerService {
       balancePaymentDate: customer.balancePaymentDate,
       paymentId: customer.paymentId,
       isActive: customer.isActive,
+      status: customer.status,
       modelDto: customer.model
         ? {
             id: customer.model.id,
@@ -294,7 +340,47 @@ class CustomerService {
         : null,
       paymentDto: customer.payment
         ? { id: customer.payment.id, name: customer.payment.name, isActive: customer.payment.isActive }
-        : null
+        : null,
+      cashData: this._cashToDto(customer.cash),
+      leaseData: this._leaseToDto(customer.lease)
+    };
+  }
+
+  _cashToDto(cash) {
+    const list = Array.isArray(cash) ? cash : (cash ? [cash] : []);
+    if (list.length === 0) return null;
+    const c = list[0];
+    return {
+      id: c.id,
+      customerId: c.customerId,
+      copyOfNic: c.copyOfNic,
+      photographOne: c.photographOne,
+      photographTwo: c.photographTwo,
+      paymentReceipt: c.paymentReceipt,
+      mta2: c.mta2,
+      slip: c.slip,
+      chequeNumber: c.chequeNumber,
+      isActive: c.isActive
+    };
+  }
+
+  _leaseToDto(lease) {
+    const list = Array.isArray(lease) ? lease : (lease ? [lease] : []);
+    if (list.length === 0) return null;
+    const l = list[0];
+    return {
+      id: l.id,
+      customerId: l.customerId,
+      companyName: l.companyName,
+      purchaseOrderNumber: l.purchaseOrderNumber,
+      copyOfNic: l.copyOfNic,
+      photographOne: l.photographOne,
+      photographTwo: l.photographTwo,
+      paymentReceipt: l.paymentReceipt,
+      mta2: l.mta2,
+      mta3: l.mta3,
+      chequeNumber: l.chequeNumber,
+      isActive: l.isActive
     };
   }
 }

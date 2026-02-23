@@ -152,4 +152,44 @@ router.put('/updateStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'ST
   }
 });
 
+/**
+ * Approve customer: set status = 'complete'
+ * POST /customer/approved?customerId=1
+ */
+router.post('/approved', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CustomerController.approved() invoked');
+    const customerId = parseInt(req.query.customerId);
+    const customerDto = await customerService.approve(customerId);
+    if (customerDto) {
+      res.json(responseUtil.getServiceResponse(customerDto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Customer not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error approving customer:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error approving customer', 500));
+  }
+});
+
+/**
+ * Return customer: set status = 'return' and restore stock.quantity by 1
+ * POST /customer/return?customerId=1
+ */
+router.post('/return', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CustomerController.return() invoked');
+    const customerId = parseInt(req.query.customerId);
+    const customerDto = await customerService.returnCustomer(customerId);
+    if (customerDto) {
+      res.json(responseUtil.getServiceResponse(customerDto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Customer not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error returning customer:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error returning customer', 500));
+  }
+});
+
 module.exports = router;

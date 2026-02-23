@@ -35,6 +35,11 @@ Customer.belongsTo(Model, { foreignKey: 'modelId', as: 'model' });
 Payment.hasMany(Customer, { foreignKey: 'paymentId', as: 'customers' });
 Customer.belongsTo(Payment, { foreignKey: 'paymentId', as: 'payment' });
 
+Customer.hasMany(Cash, { foreignKey: 'customerId', as: 'cash' });
+Cash.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
+Customer.hasMany(Lease, { foreignKey: 'customerId', as: 'lease' });
+Lease.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
+
 DealerConsignmentNote.hasMany(DealerConsignmentNoteItem, { foreignKey: 'noteId', as: 'items' });
 DealerConsignmentNoteItem.belongsTo(DealerConsignmentNote, { foreignKey: 'noteId', as: 'note' });
 DealerConsignmentNoteItem.belongsTo(Model, { foreignKey: 'modelId', as: 'model' });

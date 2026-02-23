@@ -175,6 +175,7 @@ Sequelize models in `models/` and their corresponding database tables. All table
 | balancePaymentDate    | DATEONLY | Yes  | —       |                    |
 | paymentId             | INTEGER  | No   | —       | FK → payment.id    |
 | isActive              | BOOLEAN  | Yes  | true    |                    |
+| status                | STRING   | Yes  | pending | pending, complete, return |
 
 **Model file:** `models/Customer.js`
 
@@ -354,7 +355,7 @@ Sequelize models in `models/` and their corresponding database tables. All table
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | /customer/saveWithPaymentOption | Save with lease/cash |
+| POST | /customer/saveWithPaymentOption | Save with lease/cash (status=pending, stock −1) |
 | GET | /customer/getAllPage | Get all (paginated) |
 | GET | /customer/getByName | Get by name |
 | GET | /customer/getByColor | Get by color |
@@ -362,6 +363,8 @@ Sequelize models in `models/` and their corresponding database tables. All table
 | GET | /customer/getByPayment | Get by payment |
 | POST | /customer/update | Update customer |
 | PUT | /customer/updateStatus | Update status |
+| POST | /customer/approved | Approve customer (status=complete) |
+| POST | /customer/return | Return customer (status=return, stock +1) |
 
 ### DealerConsignmentNote (`/dealerConsignmentNote`)
 

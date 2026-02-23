@@ -184,6 +184,35 @@ class StockService {
   }
 
   /**
+   * Add quantity to stock by model (and optional color/itemCode).
+   * Used when customer is returned to restore stock.quantity.
+   * @param {number} modelId - Model ID
+   * @param {number} quantityToAdd - Quantity to add
+   * @param {Object} options - { color?, itemCode?, transaction? }
+   * @returns {Object} Updated stock row
+   */
+  async addQuantityByModel(modelId, quantityToAdd, options = {}) {
+    const where = { modelId, isActive: true };
+    if (options.color != null && options.color !== '') where.color = options.color;
+    if (options.itemCode != null && options.itemCode !== '') where.itemCode = options.itemCode;
+
+    const findOpts = { where, order: [['id', 'ASC']] };
+    if (options.transaction) findOpts.transaction = options.transaction;
+
+    const stocks = await Stock.findAll(findOpts);
+    if (stocks.length === 0) {
+      throw new Error(`No matching stock found for modelId ${modelId}${options.color ? ` and color ${options.color}` : ''}`);
+    }
+
+    const stock = stocks[0];
+    const current = stock.quantity ?? 0;
+    const updateOpts = {};
+    if (options.transaction) updateOpts.transaction = options.transaction;
+    await stock.update({ quantity: current + quantityToAdd }, updateOpts);
+    return stock;
+  }
+
+  /**
    * Add quantity to current stock (e.g. current 50 + 50 => 100)
    */
   async updateQuantity(stockId, quantityToAdd) {

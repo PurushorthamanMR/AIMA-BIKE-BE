@@ -119,6 +119,12 @@ const Customer = sequelize.define('Customer', {
     type: DataTypes.BOOLEAN,
     defaultValue: true,
     field: 'isActive'
+  },
+  status: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    defaultValue: 'pending',
+    field: 'status'
   }
 }, {
   tableName: 'customer',
