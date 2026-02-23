@@ -113,6 +113,22 @@ router.get('/getByPayment', authenticateToken, authorize('ADMIN', 'MANAGER', 'ST
 });
 
 /**
+ * Get customers by customer status (e.g. pending, complete, return)
+ * GET /customer/getByCustomerStatus?status=pending
+ */
+router.get('/getByCustomerStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CustomerController.getByCustomerStatus() invoked');
+    const status = req.query.status;
+    const list = await customerService.getByCustomerStatus(status);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving customer by status:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving customer by status', 500));
+  }
+});
+
+/**
  * Update customer
  * POST /customer/update
  */

@@ -199,6 +199,23 @@ class CustomerService {
     return list.map(c => this.transformToDto(c));
   }
 
+  async getByCustomerStatus(customerStatus) {
+    logger.info('CustomerService.getByCustomerStatus() invoked');
+
+    const where = {};
+    if (customerStatus != null && customerStatus !== '') {
+      where.status = customerStatus;
+    }
+
+    const list = await Customer.findAll({
+      where,
+      include: defaultInclude,
+      order: [['id', 'ASC']]
+    });
+
+    return list.map(c => this.transformToDto(c));
+  }
+
   async update(customerDto) {
     logger.info('CustomerService.update() invoked');
 
