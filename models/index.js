@@ -14,6 +14,7 @@ const DealerConsignmentNote = require('./DealerConsignmentNote');
 const ShopDetail = require('./ShopDetail');
 const Courier = require('./Courier');
 const Transfer = require('./Transfer');
+const TransferList = require('./TransferList');
 
 // Define associations
 UserRole.hasMany(User, { foreignKey: 'userRoleId', as: 'users' });
@@ -49,10 +50,13 @@ Courier.belongsTo(Category, { foreignKey: 'categoryId', as: 'category' });
 Customer.hasMany(Courier, { foreignKey: 'customerId', as: 'couriers' });
 Courier.belongsTo(Customer, { foreignKey: 'customerId', as: 'customer' });
 
-Stock.hasMany(Transfer, { foreignKey: 'stockId', as: 'transfers' });
-Transfer.belongsTo(Stock, { foreignKey: 'stockId', as: 'stock' });
 User.hasMany(Transfer, { foreignKey: 'userId', as: 'transfers' });
 Transfer.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
+Transfer.hasMany(TransferList, { foreignKey: 'transferId', as: 'transferList' });
+TransferList.belongsTo(Transfer, { foreignKey: 'transferId', as: 'transfer' });
+Stock.hasMany(TransferList, { foreignKey: 'stockId', as: 'transferListItems' });
+TransferList.belongsTo(Stock, { foreignKey: 'stockId', as: 'stock' });
 
 module.exports = {
   sequelize,
@@ -70,5 +74,6 @@ module.exports = {
   DealerConsignmentNote,
   ShopDetail,
   Courier,
-  Transfer
+  Transfer,
+  TransferList
 };

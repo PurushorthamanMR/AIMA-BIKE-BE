@@ -7,16 +7,6 @@ const Transfer = sequelize.define('Transfer', {
     primaryKey: true,
     autoIncrement: true
   },
-  stockId: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-    field: 'stockId'
-  },
-  quantity: {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    field: 'quantity'
-  },
   companyName: {
     type: DataTypes.STRING,
     allowNull: false,
