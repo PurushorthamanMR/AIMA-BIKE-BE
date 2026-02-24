@@ -42,6 +42,11 @@ const Transfer = sequelize.define('Transfer', {
     allowNull: false,
     field: 'deliveryDetails'
   },
+  nic: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'nic'
+  },
   isActive: {
     type: DataTypes.BOOLEAN,
     defaultValue: true,

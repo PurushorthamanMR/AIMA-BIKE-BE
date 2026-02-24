@@ -24,6 +24,7 @@ class TransferService {
           contactNumber: dto.contactNumber ?? null,
           address: dto.address,
           deliveryDetails: dto.deliveryDetails,
+          nic: dto.nic ?? null,
           isActive: dto.isActive !== undefined ? dto.isActive : true
         },
         { transaction }
@@ -62,6 +63,7 @@ class TransferService {
     if (dto.userId != null) updateData.userId = dto.userId;
     if (dto.quantity !== undefined) updateData.quantity = dto.quantity;
     if (dto.contactNumber !== undefined) updateData.contactNumber = dto.contactNumber;
+    if (dto.nic !== undefined) updateData.nic = dto.nic;
 
     await transfer.update(updateData);
 
@@ -161,6 +163,7 @@ class TransferService {
       contactNumber: transfer.contactNumber,
       address: transfer.address,
       deliveryDetails: transfer.deliveryDetails,
+      nic: transfer.nic,
       isActive: transfer.isActive,
       stockDto: transfer.stock
         ? {
