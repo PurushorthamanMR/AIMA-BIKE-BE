@@ -81,6 +81,29 @@ router.put('/updateStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'ST
 });
 
 /**
+ * Get courier by ID
+ * GET /courier/getById?id=1
+ */
+router.get('/getById', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getById() invoked');
+    const id = parseInt(req.query.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json(responseUtil.getErrorServiceResponse('Invalid courier id', 400));
+    }
+    const dto = await courierService.getById(id);
+    if (dto) {
+      res.json(responseUtil.getServiceResponse(dto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Courier not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error retrieving courier by id:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error retrieving courier', 500));
+  }
+});
+
+/**
  * Get couriers by category ID
  * GET /courier/getByCategoryId?categoryId=1
  */
