@@ -93,6 +93,12 @@ class CourierService {
     return this.transformToDto(updated);
   }
 
+  async getById(id) {
+    logger.info('CourierService.getById() invoked');
+    const courier = await Courier.findByPk(id, { include: defaultInclude });
+    return courier ? this.transformToDto(courier) : null;
+  }
+
   async getByCategoryId(categoryId) {
     logger.info('CourierService.getByCategoryId() invoked');
 
