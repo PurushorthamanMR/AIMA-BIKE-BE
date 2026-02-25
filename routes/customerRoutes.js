@@ -132,6 +132,26 @@ router.get('/getByCustomerStatus', authenticateToken, authorize('ADMIN', 'MANAGE
 });
 
 /**
+ * Get customers by dateOfPurchase and status with pagination
+ * GET /customer/getByDateOfPurchaseWithStatus?dateOfPurchase=2024-01-15&status=pending&pageNumber=1&pageSize=10&isActive=true
+ */
+router.get('/getByDateOfPurchaseWithStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CustomerController.getByDateOfPurchaseWithStatus() invoked');
+    const dateOfPurchase = req.query.dateOfPurchase;
+    const status = req.query.status;
+    const pageNumber = parseInt(req.query.pageNumber) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const isActive = req.query.isActive === 'true' ? true : req.query.isActive === 'false' ? false : undefined;
+    const result = await customerService.getByDateOfPurchaseWithStatus(dateOfPurchase, status, pageNumber, pageSize, isActive);
+    res.json(responseUtil.getServiceResponse(result));
+  } catch (error) {
+    logger.error('Error retrieving customer by date of purchase and status:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving customer by date of purchase and status', 500));
+  }
+});
+
+/**
  * Update customer
  * POST /customer/update
  */
@@ -172,7 +192,7 @@ router.put('/updateStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'ST
 });
 
 /**
- * Approve customer: set status = 'complete'
+ * Approve customer: set status = 'complete' and balancePaymentDate to today only
  * POST /customer/approved?customerId=1
  */
 router.post('/approved', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
@@ -188,6 +208,26 @@ router.post('/approved', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF
   } catch (error) {
     logger.error('Error approving customer:', error);
     res.status(500).json(responseUtil.getErrorServiceResponse('Error approving customer', 500));
+  }
+});
+
+/**
+ * Delivery: set dateOfDelivery to today
+ * POST /customer/delivery?customerId=1
+ */
+router.post('/delivery', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CustomerController.delivery() invoked');
+    const customerId = parseInt(req.query.customerId);
+    const customerDto = await customerService.delivery(customerId);
+    if (customerDto) {
+      res.json(responseUtil.getServiceResponse(customerDto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Customer not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error updating delivery:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error updating delivery', 500));
   }
 });
 

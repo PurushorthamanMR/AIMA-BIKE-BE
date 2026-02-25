@@ -167,4 +167,42 @@ router.get('/getByReceiverName', authenticateToken, authorize('ADMIN', 'MANAGER'
   }
 });
 
+/**
+ * Get couriers by sent date
+ * GET /courier/getBySentDate?sentDate=YYYY-MM-DD
+ * Omit sentDate to return all couriers.
+ */
+router.get('/getBySentDate', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getBySentDate() invoked');
+    const sentDate = req.query.sentDate;
+    const list = await courierService.getBySentDate(sentDate);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving couriers by sent date:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving couriers by sent date', 500));
+  }
+});
+
+/**
+ * Get couriers with pagination
+ * GET /courier/getAllPage?pageNumber=1&pageSize=10&isActive=true&name=...&sentDate=...
+ */
+router.get('/getAllPage', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('CourierController.getAllPage() invoked');
+    const pageNumber = parseInt(req.query.pageNumber) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const isActive = req.query.isActive;
+    const searchParams = {};
+    if (req.query.name) searchParams.name = req.query.name;
+    if (req.query.sentDate) searchParams.sentDate = req.query.sentDate;
+    const result = await courierService.getAllPage(pageNumber, pageSize, isActive, searchParams);
+    res.json(responseUtil.getServiceResponse(result));
+  } catch (error) {
+    logger.error('Error retrieving couriers page:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error retrieving couriers', 500));
+  }
+});
+
 module.exports = router;

@@ -234,6 +234,44 @@ class CustomerService {
     };
   }
 
+  /**
+   * Get customers by dateOfPurchase and workflow status (pending|complete|return) with pagination.
+   * GET /customer/getByDateOfPurchaseWithStatus?dateOfPurchase=2024-01-15&status=pending&pageNumber=1&pageSize=10&isActive=true
+   */
+  async getByDateOfPurchaseWithStatus(dateOfPurchase, customerStatus, pageNumber = 1, pageSize = 10, isActive) {
+    logger.info('CustomerService.getByDateOfPurchaseWithStatus() invoked');
+
+    const where = {};
+    if (dateOfPurchase != null && dateOfPurchase !== '') {
+      where.dateOfPurchase = dateOfPurchase;
+    }
+    if (customerStatus != null && customerStatus !== '') {
+      where.status = customerStatus;
+    }
+    if (isActive !== undefined && isActive !== null) {
+      where.isActive = isActive;
+    }
+
+    const offset = (pageNumber - 1) * pageSize;
+
+    const { count, rows } = await Customer.findAndCountAll({
+      where,
+      include: defaultInclude,
+      limit: pageSize,
+      offset,
+      order: [['id', 'ASC']]
+    });
+
+    const content = rows.map(c => this.transformToDto(c));
+    return {
+      content,
+      totalElements: count,
+      totalPages: Math.ceil(count / pageSize),
+      pageNumber,
+      pageSize
+    };
+  }
+
   async update(customerDto) {
     logger.info('CustomerService.update() invoked');
 
@@ -291,7 +329,7 @@ class CustomerService {
   }
 
   /**
-   * Approve customer: set status = 'complete', and set balancePaymentDate and dateOfDelivery to today.
+   * Approve customer: set status = 'complete' and balancePaymentDate to today only.
    * POST /customer/approved?customerId=1
    */
   async approve(customerId) {
@@ -305,7 +343,27 @@ class CustomerService {
     const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD for DATEONLY
     await customer.update({
       status: 'complete',
-      balancePaymentDate: today,
+      balancePaymentDate: today
+    });
+
+    const updated = await Customer.findByPk(customerId, { include: defaultInclude });
+    return this.transformToDto(updated);
+  }
+
+  /**
+   * Delivery: set dateOfDelivery to today.
+   * POST /customer/delivery?customerId=1
+   */
+  async delivery(customerId) {
+    logger.info('CustomerService.delivery() invoked');
+
+    const customer = await Customer.findByPk(customerId);
+    if (!customer) {
+      return null;
+    }
+
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD for DATEONLY
+    await customer.update({
       dateOfDelivery: today
     });
 

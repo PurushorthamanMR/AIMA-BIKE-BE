@@ -109,18 +109,22 @@ router.get('/getByUserId', authenticateToken, authorize('ADMIN', 'MANAGER', 'STA
 });
 
 /**
- * Get transfers by receiver name (searches companyName)
- * GET /transfer/getByReceiverName?receiverName=...
+ * Get transfers with pagination
+ * GET /transfer/getAllPage?pageNumber=1&pageSize=10&isActive=true&companyName=...
  */
-router.get('/getByReceiverName', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+router.get('/getAllPage', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
   try {
-    logger.info('TransferController.getByReceiverName() invoked');
-    const receiverName = req.query.receiverName;
-    const list = await transferService.getByReceiverName(receiverName);
-    res.json(responseUtil.getServiceResponse(list));
+    logger.info('TransferController.getAllPage() invoked');
+    const pageNumber = parseInt(req.query.pageNumber) || 1;
+    const pageSize = parseInt(req.query.pageSize) || 10;
+    const isActive = req.query.isActive;
+    const searchParams = {};
+    if (req.query.companyName) searchParams.companyName = req.query.companyName;
+    const result = await transferService.getAllPage(pageNumber, pageSize, isActive, searchParams);
+    res.json(responseUtil.getServiceResponse(result));
   } catch (error) {
-    logger.error('Error retrieving transfers by receiver name:', error);
-    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving transfers by receiver name', 500));
+    logger.error('Error retrieving transfers page:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error retrieving transfers', 500));
   }
 });
 

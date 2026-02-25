@@ -29,11 +29,14 @@ class StockService {
   async getAllPage(pageNumber, pageSize, searchParams) {
     logger.info('StockService.getAllPage() invoked');
 
-    const where = {};
-    if (searchParams?.noteId != null) where.noteId = searchParams.noteId;
-    if (searchParams?.modelId != null) where.modelId = searchParams.modelId;
-    if (searchParams?.color) where.color = { [Op.like]: `%${searchParams.color}%` };
-    if (searchParams?.itemCode) where.itemCode = { [Op.like]: `%${searchParams.itemCode}%` };
+    const whereConditions = [];
+    if (searchParams?.noteId != null) whereConditions.push({ noteId: searchParams.noteId });
+    if (searchParams?.modelId != null) whereConditions.push({ modelId: searchParams.modelId });
+    if (searchParams?.color) whereConditions.push({ color: { [Op.like]: `%${searchParams.color}%` } });
+    if (searchParams?.itemCode) whereConditions.push({ itemCode: { [Op.like]: `%${searchParams.itemCode}%` } });
+    // Exclude stocks where quantity is 0
+    whereConditions.push({ [Op.or]: [{ quantity: { [Op.gt]: 0 } }, { quantity: null }] });
+    const where = whereConditions.length === 1 ? whereConditions[0] : { [Op.and]: whereConditions };
 
     const offset = (pageNumber - 1) * pageSize;
 

@@ -163,6 +163,60 @@ class CourierService {
     return list.map(c => this.transformToDto(c));
   }
 
+  /**
+   * Get couriers by sent date.
+   * GET /courier/getBySentDate?sentDate=YYYY-MM-DD
+   * If sentDate is omitted or empty, returns all couriers.
+   */
+  async getBySentDate(sentDate) {
+    logger.info('CourierService.getBySentDate() invoked');
+
+    const where = {};
+    if (sentDate && typeof sentDate === 'string' && sentDate.trim()) {
+      where.sentDate = sentDate.trim();
+    }
+
+    const list = await Courier.findAll({
+      where,
+      include: defaultInclude,
+      order: [['id', 'ASC']]
+    });
+
+    return list.map(c => this.transformToDto(c));
+  }
+
+  /**
+   * Get couriers with pagination.
+   * GET /courier/getAllPage?pageNumber=1&pageSize=10&isActive=true&name=...&sentDate=...
+   */
+  async getAllPage(pageNumber = 1, pageSize = 10, isActive, searchParams) {
+    logger.info('CourierService.getAllPage() invoked');
+
+    const where = {};
+    if (isActive !== undefined && isActive !== null && isActive !== '') where.isActive = isActive === true || isActive === 'true';
+    if (searchParams?.name) where.name = { [Op.like]: `%${searchParams.name}%` };
+    if (searchParams?.sentDate) where.sentDate = searchParams.sentDate;
+
+    const offset = (pageNumber - 1) * pageSize;
+
+    const { count, rows } = await Courier.findAndCountAll({
+      where,
+      include: defaultInclude,
+      limit: pageSize,
+      offset,
+      order: [['id', 'DESC']]
+    });
+
+    const content = rows.map(c => this.transformToDto(c));
+    return {
+      content,
+      totalElements: count,
+      totalPages: Math.ceil(count / pageSize),
+      pageNumber,
+      pageSize
+    };
+  }
+
   transformToDto(courier) {
     if (!courier) return null;
     return {

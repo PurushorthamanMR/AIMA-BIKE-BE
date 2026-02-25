@@ -18,10 +18,20 @@ class TransferService {
   async save(dto) {
     logger.info('TransferService.save() invoked');
 
-    const items = dto.transferList ?? dto.items ?? (dto.stockId != null ? [{ stockId: dto.stockId ?? dto.stock?.id, quantity: dto.quantity ?? 1 }] : []);
-    if (!items.length) {
+    const rawItems = dto.transferList ?? dto.items ?? (dto.stockId != null ? [{ stockId: dto.stockId ?? dto.stock?.id, quantity: dto.quantity ?? 1 }] : []);
+    if (!rawItems.length) {
       throw new Error('At least one stock item is required in transferList');
     }
+
+    // Merge by stockId: same stockId appears once with summed quantity (duplicate stockIds not saved as separate lines)
+    const byStockId = {};
+    for (const line of rawItems) {
+      const stockId = line.stockId ?? line.stock?.id;
+      if (!stockId) continue;
+      const sid = Number(stockId);
+      byStockId[sid] = (byStockId[sid] || 0) + (line.quantity ?? 1);
+    }
+    const items = Object.entries(byStockId).map(([stockId, quantity]) => ({ stockId: Number(stockId), quantity }));
 
     const transaction = await sequelize.transaction();
     try {
@@ -32,7 +42,6 @@ class TransferService {
           contactNumber: dto.contactNumber ?? null,
           address: dto.address,
           deliveryDetails: dto.deliveryDetails,
-          nic: dto.nic ?? null,
           isActive: dto.isActive !== undefined ? dto.isActive : true
         },
         { transaction }
@@ -77,7 +86,6 @@ class TransferService {
     };
     if (dto.userId != null) updateData.userId = dto.userId;
     if (dto.contactNumber !== undefined) updateData.contactNumber = dto.contactNumber;
-    if (dto.nic !== undefined) updateData.nic = dto.nic;
 
     await transfer.update(updateData);
 
@@ -142,31 +150,42 @@ class TransferService {
     return list.map(t => this.transformToDto(t));
   }
 
+  /**
+   * Get transfers with pagination.
+   * GET /transfer/getAllPage?pageNumber=1&pageSize=10&isActive=true&companyName=...
+   */
+  async getAllPage(pageNumber = 1, pageSize = 10, isActive, searchParams) {
+    logger.info('TransferService.getAllPage() invoked');
+
+    const where = {};
+    if (isActive !== undefined && isActive !== null && isActive !== '') where.isActive = isActive === true || isActive === 'true';
+    if (searchParams?.companyName) where.companyName = { [Op.like]: `%${searchParams.companyName}%` };
+
+    const offset = (pageNumber - 1) * pageSize;
+
+    const { count, rows } = await Transfer.findAndCountAll({
+      where,
+      include: defaultInclude,
+      limit: pageSize,
+      offset,
+      order: [['id', 'DESC']]
+    });
+
+    const content = rows.map(t => this.transformToDto(t));
+    return {
+      content,
+      totalElements: count,
+      totalPages: Math.ceil(count / pageSize),
+      pageNumber,
+      pageSize
+    };
+  }
+
   async getByUserId(userId) {
     logger.info('TransferService.getByUserId() invoked');
 
     const where = {};
     if (userId != null && !Number.isNaN(Number(userId))) where.userId = Number(userId);
-
-    const list = await Transfer.findAll({
-      where,
-      include: defaultInclude,
-      order: [['id', 'ASC']]
-    });
-
-    return list.map(t => this.transformToDto(t));
-  }
-
-  /**
-   * Get by receiver name (searches companyName).
-   */
-  async getByReceiverName(receiverName) {
-    logger.info('TransferService.getByReceiverName() invoked');
-
-    const where = {};
-    if (receiverName) {
-      where.companyName = { [Op.like]: `%${receiverName}%` };
-    }
 
     const list = await Transfer.findAll({
       where,
@@ -211,7 +230,6 @@ class TransferService {
       contactNumber: transfer.contactNumber,
       address: transfer.address,
       deliveryDetails: transfer.deliveryDetails,
-      nic: transfer.nic,
       isActive: transfer.isActive,
       transferList,
       userDto: transfer.user
