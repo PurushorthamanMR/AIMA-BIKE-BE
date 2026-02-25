@@ -196,6 +196,16 @@ class TransferService {
     return list.map(t => this.transformToDto(t));
   }
 
+  /**
+   * Get transfer by ID with transferList (and stock, user).
+   * GET /transfer/getById?id=1
+   */
+  async getById(id) {
+    logger.info('TransferService.getById() invoked');
+    const transfer = await Transfer.findByPk(id, { include: defaultInclude });
+    return transfer ? this.transformToDto(transfer) : null;
+  }
+
   transformToDto(transfer) {
     if (!transfer) return null;
     const transferList = (transfer.transferList || []).map(line => ({

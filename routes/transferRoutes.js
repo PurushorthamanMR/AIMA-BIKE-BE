@@ -61,6 +61,29 @@ router.put('/updateStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'ST
 });
 
 /**
+ * Get transfer by ID (transfer + transferList with stock, user)
+ * GET /transfer/getById?id=1
+ */
+router.get('/getById', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('TransferController.getById() invoked');
+    const id = parseInt(req.query.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json(responseUtil.getErrorServiceResponse('Invalid transfer id', 400));
+    }
+    const dto = await transferService.getById(id);
+    if (dto) {
+      res.json(responseUtil.getServiceResponse(dto));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Transfer not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error retrieving transfer by id:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error retrieving transfer', 500));
+  }
+});
+
+/**
  * Get transfers by stock ID
  * GET /transfer/getByStockId?stockId=1
  */
