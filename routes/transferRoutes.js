@@ -116,6 +116,22 @@ router.get('/getByCompanyName', authenticateToken, authorize('ADMIN', 'MANAGER',
 });
 
 /**
+ * Get transfers by NIC
+ * GET /transfer/getByNic?nic=...
+ */
+router.get('/getByNic', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('TransferController.getByNic() invoked');
+    const nic = req.query.nic;
+    const list = await transferService.getByNic(nic);
+    res.json(responseUtil.getServiceResponse(list));
+  } catch (error) {
+    logger.error('Error retrieving transfers by NIC:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving transfers by NIC', 500));
+  }
+});
+
+/**
  * Get transfers by user ID
  * GET /transfer/getByUserId?userId=1
  */
@@ -133,7 +149,7 @@ router.get('/getByUserId', authenticateToken, authorize('ADMIN', 'MANAGER', 'STA
 
 /**
  * Get transfers with pagination
- * GET /transfer/getAllPage?pageNumber=1&pageSize=10&isActive=true&companyName=...
+ * GET /transfer/getAllPage?pageNumber=1&pageSize=10&isActive=true&companyName=...&nic=...
  */
 router.get('/getAllPage', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
   try {
@@ -143,6 +159,7 @@ router.get('/getAllPage', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAF
     const isActive = req.query.isActive;
     const searchParams = {};
     if (req.query.companyName) searchParams.companyName = req.query.companyName;
+    if (req.query.nic) searchParams.nic = req.query.nic;
     const result = await transferService.getAllPage(pageNumber, pageSize, isActive, searchParams);
     res.json(responseUtil.getServiceResponse(result));
   } catch (error) {

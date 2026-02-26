@@ -31,12 +31,12 @@ class PasswordResetService {
       used: false
     });
 
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
-    const emailText = `Hello ${user.firstName},\n\nYou requested a password reset. Click the link below to reset your password (valid for ${TOKEN_EXPIRY_HOURS} hour(s)):\n\n${resetLink}\n\nIf you did not request this, please ignore this email.`;
+    const resetPageUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password`;
+    const emailText = `Hello ${user.firstName},\n\nYou requested a password reset. Use the reset token code below on the reset password page (valid for ${TOKEN_EXPIRY_HOURS} hour(s)):\n\nReset token code: ${token}\n\nGo to: ${resetPageUrl}\nEnter the reset token code above and your new password.\n\nIf you did not request this, please ignore this email.`;
 
     await emailService.sendEmail(user.emailAddress, 'Password Reset Request', emailText);
 
-    return { message: 'If an account exists with this email, a password reset link has been sent.' };
+    return { message: 'If an account exists with this email, a password reset token code has been sent.' };
   }
 
   /**

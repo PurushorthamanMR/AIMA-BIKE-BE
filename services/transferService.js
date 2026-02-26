@@ -42,6 +42,7 @@ class TransferService {
           contactNumber: dto.contactNumber ?? null,
           address: dto.address,
           deliveryDetails: dto.deliveryDetails,
+          nic: dto.nic ?? null,
           isActive: dto.isActive !== undefined ? dto.isActive : true
         },
         { transaction }
@@ -86,6 +87,7 @@ class TransferService {
     };
     if (dto.userId != null) updateData.userId = dto.userId;
     if (dto.contactNumber !== undefined) updateData.contactNumber = dto.contactNumber;
+    if (dto.nic !== undefined) updateData.nic = dto.nic ?? null;
 
     await transfer.update(updateData);
 
@@ -150,6 +152,23 @@ class TransferService {
     return list.map(t => this.transformToDto(t));
   }
 
+  async getByNic(nic) {
+    logger.info('TransferService.getByNic() invoked');
+
+    const where = {};
+    if (nic) {
+      where.nic = { [Op.like]: `%${nic}%` };
+    }
+
+    const list = await Transfer.findAll({
+      where,
+      include: defaultInclude,
+      order: [['id', 'ASC']]
+    });
+
+    return list.map(t => this.transformToDto(t));
+  }
+
   /**
    * Get transfers with pagination.
    * GET /transfer/getAllPage?pageNumber=1&pageSize=10&isActive=true&companyName=...
@@ -160,6 +179,7 @@ class TransferService {
     const where = {};
     if (isActive !== undefined && isActive !== null && isActive !== '') where.isActive = isActive === true || isActive === 'true';
     if (searchParams?.companyName) where.companyName = { [Op.like]: `%${searchParams.companyName}%` };
+    if (searchParams?.nic) where.nic = { [Op.like]: `%${searchParams.nic}%` };
 
     const offset = (pageNumber - 1) * pageSize;
 
@@ -240,6 +260,7 @@ class TransferService {
       contactNumber: transfer.contactNumber,
       address: transfer.address,
       deliveryDetails: transfer.deliveryDetails,
+      nic: transfer.nic ?? null,
       isActive: transfer.isActive,
       transferList,
       userDto: transfer.user
