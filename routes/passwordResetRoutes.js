@@ -1,8 +1,52 @@
 const express = require('express');
 const router = express.Router();
 const passwordResetService = require('../services/passwordResetService');
+const emailVerificationService = require('../services/emailVerificationService');
 const responseUtil = require('../utils/responseUtil');
 const logger = require('../config/logger');
+
+/**
+ * Send email verification OTP
+ * POST /auth/send-email-otp
+ * Body: { "emailAddress": "user@example.com" }
+ */
+router.post('/send-email-otp', async (req, res) => {
+  try {
+    logger.info('AuthController.sendEmailOtp() invoked');
+    const { emailAddress } = req.body;
+    if (!emailAddress) {
+      return res.status(400).json(responseUtil.getErrorServiceResponse('emailAddress is required', 400));
+    }
+    const result = await emailVerificationService.sendOtp(emailAddress);
+    res.json(responseUtil.getServiceResponse(result));
+  } catch (error) {
+    logger.error('Error sending email OTP:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error sending OTP', 500));
+  }
+});
+
+/**
+ * Verify email OTP - returns short-lived emailVerificationToken
+ * POST /auth/verify-email-otp
+ * Body: { "emailAddress": "user@example.com", "otp": "123456" }
+ */
+router.post('/verify-email-otp', async (req, res) => {
+  try {
+    logger.info('AuthController.verifyEmailOtp() invoked');
+    const { emailAddress, otp } = req.body;
+    if (!emailAddress || !otp) {
+      return res.status(400).json(responseUtil.getErrorServiceResponse('emailAddress and otp are required', 400));
+    }
+    const result = await emailVerificationService.verifyOtp(emailAddress, otp);
+    res.json(responseUtil.getServiceResponse(result));
+  } catch (error) {
+    logger.error('Error verifying email OTP:', error);
+    if (error.message.includes('Invalid') || error.message.includes('expired')) {
+      return res.status(400).json(responseUtil.getErrorServiceResponse(error.message, 400));
+    }
+    res.status(500).json(responseUtil.getErrorServiceResponse(error.message || 'Error verifying OTP', 500));
+  }
+});
 
 /**
  * Request password reset (forgot password)

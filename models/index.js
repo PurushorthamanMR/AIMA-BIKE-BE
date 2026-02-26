@@ -15,6 +15,8 @@ const ShopDetail = require('./ShopDetail');
 const Courier = require('./Courier');
 const Transfer = require('./Transfer');
 const TransferList = require('./TransferList');
+const Setting = require('./Setting');
+const EmailVerification = require('./EmailVerification');
 
 // Define associations
 UserRole.hasMany(User, { foreignKey: 'userRoleId', as: 'users' });
@@ -75,5 +77,7 @@ module.exports = {
   ShopDetail,
   Courier,
   Transfer,
-  TransferList
+  TransferList,
+  Setting,
+  EmailVerification
 };

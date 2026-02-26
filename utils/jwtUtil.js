@@ -18,6 +18,14 @@ class JwtUtil {
   }
 
   /**
+   * Generate short-lived JWT for email verification (e.g. 10 min)
+   * Payload must include emailVerified: emailAddress
+   */
+  generateEmailVerificationToken(payload) {
+    return jwt.sign(payload, JWT_SECRET, { expiresIn: '10m' });
+  }
+
+  /**
    * Verify JWT token
    * @param {String} token - JWT token
    * @returns {Object} Decoded token payload
