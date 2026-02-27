@@ -1,6 +1,7 @@
--- AIMA Bike DB Backup
 -- Generated: 2026-02-27T05:05:45.963Z
 
+
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- Data: category
 LOCK TABLES `category` WRITE;
@@ -127,3 +128,5 @@ INSERT INTO `userrole` (`id`, `userRole`, `isActive`) VALUES (1,'Admin',1);
 INSERT INTO `userrole` (`id`, `userRole`, `isActive`) VALUES (2,'Manager',1);
 INSERT INTO `userrole` (`id`, `userRole`, `isActive`) VALUES (3,'Staff',1);
 UNLOCK TABLES;
+
+SET FOREIGN_KEY_CHECKS = 1;

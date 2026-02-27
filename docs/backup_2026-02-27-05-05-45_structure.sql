@@ -1,6 +1,7 @@
 -- AIMA Bike DB Backup
 -- Generated: 2026-02-27T05:05:45.963Z
 
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- Table: cash
 DROP TABLE IF EXISTS `cash`;
@@ -280,3 +281,5 @@ CREATE TABLE `userrole` (
   `isActive` tinyint(1) DEFAULT '1',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
+SET FOREIGN_KEY_CHECKS = 1;
