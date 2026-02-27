@@ -21,10 +21,10 @@ router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), 
 });
 
 /**
- * Get all shop details
+ * Get all shop details (public - no JWT required, so frontend can load name/logo before login)
  * GET /shopDetails/getAll
  */
-router.get('/getAll', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+router.get('/getAll', async (req, res) => {
   try {
     logger.info('ShopDetailsController.getAll() invoked');
     const list = await shopDetailsService.getAll();

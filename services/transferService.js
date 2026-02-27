@@ -4,6 +4,27 @@ const { sequelize } = require('../config/database');
 const stockService = require('./stockService');
 const logger = require('../config/logger');
 
+/** Contact number must be exactly 10 digits when provided. */
+function validateContactNumber(value) {
+  if (value == null || value === '') return;
+  const num = Number(value);
+  if (!Number.isInteger(num) || num < 0) throw new Error('Contact number must be 10 digits only.');
+  const str = String(num);
+  if (str.length !== 10) throw new Error('Contact number must be exactly 10 digits.');
+}
+
+/** Sri Lanka NIC: old (9 digits + V/X) or new (12 digits) only. */
+function validateNIC(value) {
+  if (value == null || (typeof value === 'string' && value.trim() === '')) return;
+  const n = String(value).trim().replace(/[\s-]/g, '');
+  if (!n) return;
+  const oldFormat = /^\d{9}[VvXx]$/;
+  const newFormat = /^\d{12}$/;
+  if (!oldFormat.test(n) && !newFormat.test(n)) {
+    throw new Error('NIC must be Sri Lanka format: old (9 digits + V or X) or new (12 digits only).');
+  }
+}
+
 const stockInclude = [{ model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }];
 const defaultInclude = [
   {
@@ -32,6 +53,9 @@ class TransferService {
       byStockId[sid] = (byStockId[sid] || 0) + (line.quantity ?? 1);
     }
     const items = Object.entries(byStockId).map(([stockId, quantity]) => ({ stockId: Number(stockId), quantity }));
+
+    validateContactNumber(dto.contactNumber);
+    validateNIC(dto.nic);
 
     const transaction = await sequelize.transaction();
     try {
@@ -78,6 +102,9 @@ class TransferService {
     if (!transfer) {
       throw new Error('Transfer not found');
     }
+
+    validateContactNumber(dto.contactNumber);
+    validateNIC(dto.nic);
 
     const updateData = {
       companyName: dto.companyName ?? transfer.companyName,
@@ -268,6 +295,7 @@ class TransferService {
             id: transfer.user.id,
             firstName: transfer.user.firstName,
             lastName: transfer.user.lastName,
+            name: [transfer.user.firstName, transfer.user.lastName].filter(Boolean).join(' ') || null,
             emailAddress: transfer.user.emailAddress,
             isActive: transfer.user.isActive
           }

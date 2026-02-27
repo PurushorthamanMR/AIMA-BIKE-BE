@@ -6,10 +6,10 @@ const { authenticateToken, authorize } = require('../middleware/authMiddleware')
 const logger = require('../config/logger');
 
 /**
- * Save a new setting
+ * Save a new setting (Admin only)
  * POST /settings/save
  */
-router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+router.post('/save', authenticateToken, authorize('ADMIN'), async (req, res) => {
   try {
     logger.info('SettingsController.save() invoked');
     const dto = await settingsService.save(req.body);
@@ -21,10 +21,10 @@ router.post('/save', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), 
 });
 
 /**
- * Update setting
+ * Update setting (Admin only - name and toggles)
  * POST /settings/update
  */
-router.post('/update', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+router.post('/update', authenticateToken, authorize('ADMIN'), async (req, res) => {
   try {
     logger.info('SettingsController.update() invoked');
     const dto = await settingsService.update(req.body);
@@ -40,10 +40,10 @@ router.post('/update', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF')
 });
 
 /**
- * Update admin status
+ * Update admin status (Admin only - decides which sidebar items managers see)
  * PUT /settings/updateAdminStatus?settingsId=1&status=true
  */
-router.put('/updateAdminStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+router.put('/updateAdminStatus', authenticateToken, authorize('ADMIN'), async (req, res) => {
   try {
     logger.info('SettingsController.updateAdminStatus() invoked');
     const settingsId = parseInt(req.query.settingsId);
@@ -61,10 +61,10 @@ router.put('/updateAdminStatus', authenticateToken, authorize('ADMIN', 'MANAGER'
 });
 
 /**
- * Update manager status
+ * Update manager status (Admin and Manager - Manager decides what staff see)
  * PUT /settings/updateManagerStatus?settingsId=1&status=true
  */
-router.put('/updateManagerStatus', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+router.put('/updateManagerStatus', authenticateToken, authorize('ADMIN', 'MANAGER'), async (req, res) => {
   try {
     logger.info('SettingsController.updateManagerStatus() invoked');
     const settingsId = parseInt(req.query.settingsId);

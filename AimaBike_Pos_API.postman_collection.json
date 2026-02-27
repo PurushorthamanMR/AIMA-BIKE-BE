@@ -1,6 +1,6 @@
 {
   "info": {
-    "_postman_id": "aimabike-pos-api-collection",
+    "_postman_id": "a1b2c3d4-e5f6-4a5b-8c9d-0e1f2a3b4c5d",
     "name": "AimaBike POS API - Node.js",
     "description": "Separate APIs for testing. Run Login first to set jwt_token.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -313,12 +313,20 @@
         {"name": "Save Transfer", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"userId\": 1,\n  \"companyName\": \"ABC Dealer\",\n  \"address\": \"123 Main St\",\n  \"deliveryDetails\": \"By truck\",\n  \"transferList\": [\n    { \"stockId\": 1, \"quantity\": 1 },\n    { \"stockId\": 2, \"quantity\": 1 }\n  ]\n}"}, "url": {"raw": "{{base_url}}/transfer/save", "host": ["{{base_url}}"], "path": ["transfer", "save"]}, "description": "Creates a transfer with one or more stock lines. transferList: array of { stockId, quantity } (quantity defaults to 1). Response includes transferList with each line and stockDto."}},
         {"name": "Update Transfer", "request": {"method": "POST", "header": [{"key": "Content-Type", "value": "application/json"}], "body": {"mode": "raw", "raw": "{\n  \"id\": 1,\n  \"userId\": 1,\n  \"companyName\": \"ABC Co Updated\",\n  \"contactNumber\": 771234567,\n  \"address\": \"123 Main St\",\n  \"deliveryDetails\": \"Door delivery\",\n  \"nic\": null,\n  \"isActive\": true\n}"}, "url": {"raw": "{{base_url}}/transfer/update", "host": ["{{base_url}}"], "path": ["transfer", "update"]}, "description": "Updates transfer header only (companyName, address, deliveryDetails, contactNumber, nic, isActive). Transfer lines are in transferList and are not updated here."}},
         {"name": "Update Transfer Status", "request": {"method": "PUT", "url": {"raw": "{{base_url}}/transfer/updateStatus?transferId=1&status=false", "host": ["{{base_url}}"], "path": ["transfer", "updateStatus"], "query": [{"key": "transferId", "value": "1"}, {"key": "status", "value": "false"}]}}},
-        {"name": "Get By Id", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getById?id=1", "host": ["{{base_url}}"], "path": ["transfer", "getById"], "query": [{"key": "id", "value": "1"}]}, "description": "Get transfer by ID with transferList (and stock, user)."},
+        {"name": "Get By Id", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getById?id=1", "host": ["{{base_url}}"], "path": ["transfer", "getById"], "query": [{"key": "id", "value": "1"}]}, "description": "Get transfer by ID with transferList (and stock, user)."}},
         {"name": "Get By Stock Id", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getByStockId?stockId=1", "host": ["{{base_url}}"], "path": ["transfer", "getByStockId"], "query": [{"key": "stockId", "value": "1"}]}}},
         {"name": "Get By Company Name", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getByCompanyName?companyName=ABC", "host": ["{{base_url}}"], "path": ["transfer", "getByCompanyName"], "query": [{"key": "companyName", "value": "ABC"}]}}},
         {"name": "Get By Nic", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getByNic?nic=123456789V", "host": ["{{base_url}}"], "path": ["transfer", "getByNic"], "query": [{"key": "nic", "value": "123456789V"}]}, "description": "Get transfers by NIC (partial match). Omit nic or leave empty to return all."}},
         {"name": "Get By User Id", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getByUserId?userId=1", "host": ["{{base_url}}"], "path": ["transfer", "getByUserId"], "query": [{"key": "userId", "value": "1"}]}}},
         {"name": "Get All Page", "request": {"method": "GET", "url": {"raw": "{{base_url}}/transfer/getAllPage?pageNumber=1&pageSize=10&isActive=true", "host": ["{{base_url}}"], "path": ["transfer", "getAllPage"], "query": [{"key": "pageNumber", "value": "1"}, {"key": "pageSize", "value": "10"}, {"key": "isActive", "value": "true"}]}, "description": "Get transfers with pagination. Optional: companyName, nic."}}
+      ]
+    },
+    {
+      "name": "16 - Report",
+      "item": [
+        {"name": "Get Sales Report (Daily)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/report/sales?period=daily", "host": ["{{base_url}}"], "path": ["report", "sales"], "query": [{"key": "period", "value": "daily"}]}, "description": "Aggregated sales report: last 30 days by date. Response: summary (totalSales, totalCount, avgPerSale), chartData, paymentData, itemWiseList, customerData."}},
+        {"name": "Get Sales Report (Monthly)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/report/sales?period=monthly", "host": ["{{base_url}}"], "path": ["report", "sales"], "query": [{"key": "period", "value": "monthly"}]}, "description": "Aggregated sales report: last 365 days by month (last 12 months). Same response shape as daily."}},
+        {"name": "Get Sales Report (Yearly)", "request": {"method": "GET", "url": {"raw": "{{base_url}}/report/sales?period=yearly", "host": ["{{base_url}}"], "path": ["report", "sales"], "query": [{"key": "period", "value": "yearly"}]}, "description": "Aggregated sales report: all completed customers by year. Same response shape as daily."}}
       ]
     }
   ],

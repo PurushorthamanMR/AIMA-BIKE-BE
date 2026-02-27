@@ -35,6 +35,8 @@ app.use('/shopDetails', require('./routes/shopDetailsRoutes'));
 app.use('/courier', require('./routes/courierRoutes'));
 app.use('/transfer', require('./routes/transferRoutes'));
 app.use('/settings', require('./routes/settingsRoutes'));
+app.use('/report', require('./routes/reportRoutes'));
+app.use('/database', require('./routes/databaseRoutes'));
 
 // Error handling middleware
 app.use((err, req, res, next) => {

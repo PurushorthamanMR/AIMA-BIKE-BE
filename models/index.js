@@ -17,6 +17,7 @@ const Transfer = require('./Transfer');
 const TransferList = require('./TransferList');
 const Setting = require('./Setting');
 const EmailVerification = require('./EmailVerification');
+const Backup = require('./Backup');
 
 // Define associations
 UserRole.hasMany(User, { foreignKey: 'userRoleId', as: 'users' });
@@ -79,5 +80,6 @@ module.exports = {
   Transfer,
   TransferList,
   Setting,
-  EmailVerification
+  EmailVerification,
+  Backup
 };
