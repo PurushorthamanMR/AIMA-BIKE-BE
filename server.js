@@ -7,7 +7,7 @@ const logger = require('./config/logger');
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 // Load all models and associations
-const { UserRole, User } = require('./models');
+const { UserRole, User, Setting } = require('./models');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -124,7 +124,35 @@ async function initializeDefaultUser(userRoleId) {
   }
 }
 
-// Initialize all default data: UserRole (Admin, Manager, Staff) + User (Prusothaman, no branchId)
+// Default sidebar/menu settings - seed only if not already present
+const DEFAULT_SETTINGS_NAMES = [
+  'Dashboard', 'POS', 'Payment', 'Reports', 'Stock', 'Models', 'Category', 'Transfer',
+  'Customers', 'Dealer', 'Courier', 'Profile', 'User', 'ShopDetails', 'Settings', 'Database'
+];
+
+async function initializeDefaultSettings() {
+  try {
+    for (const name of DEFAULT_SETTINGS_NAMES) {
+      const [setting, created] = await Setting.findOrCreate({
+        where: { name },
+        defaults: {
+          name,
+          isActiveAdmin: true,
+          isActiveManager: true
+        }
+      });
+      if (created) {
+        logger.info(`Created default setting: ${name}`);
+      }
+    }
+    logger.info('Default settings initialization completed.');
+  } catch (error) {
+    logger.error('Error initializing default settings:', error);
+    throw error;
+  }
+}
+
+// Initialize all default data: UserRole (Admin, Manager, Staff) + User (Prusothaman, no branchId) + Settings
 async function initializeDefaultData() {
   try {
     await initializeDefaultUserRoles();
@@ -133,6 +161,7 @@ async function initializeDefaultData() {
       throw new Error('Admin role not found. Cannot create default user.');
     }
     await initializeDefaultUser(adminRole.id);
+    await initializeDefaultSettings();
     logger.info('All default data initialization completed.');
   } catch (error) {
     logger.error('Error initializing default data:', error);

@@ -4,13 +4,11 @@ const { sequelize } = require('../config/database');
 const stockService = require('./stockService');
 const logger = require('../config/logger');
 
-/** Contact number must be exactly 10 digits when provided. */
+/** Contact number must be exactly 10 digits when provided. Validate as string to preserve leading zero (e.g. 0765947337). */
 function validateContactNumber(value) {
   if (value == null || value === '') return;
-  const num = Number(value);
-  if (!Number.isInteger(num) || num < 0) throw new Error('Contact number must be 10 digits only.');
-  const str = String(num);
-  if (str.length !== 10) throw new Error('Contact number must be exactly 10 digits.');
+  const str = String(value).trim();
+  if (!/^\d{10}$/.test(str)) throw new Error('Contact number must be exactly 10 digits.');
 }
 
 /** Sri Lanka NIC: old (9 digits + V/X) or new (12 digits) only. */
@@ -63,7 +61,7 @@ class TransferService {
         {
           userId: dto.userId ?? dto.user?.id,
           companyName: dto.companyName,
-          contactNumber: dto.contactNumber ?? null,
+          contactNumber: dto.contactNumber != null ? String(dto.contactNumber) : null,
           address: dto.address,
           deliveryDetails: dto.deliveryDetails,
           nic: dto.nic ?? null,
@@ -113,7 +111,7 @@ class TransferService {
       isActive: dto.isActive !== undefined ? dto.isActive : transfer.isActive
     };
     if (dto.userId != null) updateData.userId = dto.userId;
-    if (dto.contactNumber !== undefined) updateData.contactNumber = dto.contactNumber;
+    if (dto.contactNumber !== undefined) updateData.contactNumber = dto.contactNumber != null ? String(dto.contactNumber) : null;
     if (dto.nic !== undefined) updateData.nic = dto.nic ?? null;
 
     await transfer.update(updateData);

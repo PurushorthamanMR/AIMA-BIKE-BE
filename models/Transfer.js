@@ -13,7 +13,7 @@ const Transfer = sequelize.define('Transfer', {
     field: 'companyName'
   },
   contactNumber: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.STRING(15),
     allowNull: true,
     field: 'contactNumber'
   },
