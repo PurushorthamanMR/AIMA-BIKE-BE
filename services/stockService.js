@@ -123,6 +123,7 @@ class StockService {
     if (stockDto.noteId != null) updateData.noteId = stockDto.noteId;
     if (stockDto.modelId != null) updateData.modelId = stockDto.modelId;
     if (stockDto.itemCode !== undefined) updateData.itemCode = stockDto.itemCode;
+    if (stockDto.barcode !== undefined) updateData.barcode = stockDto.barcode;
     if (stockDto.chassisNumber !== undefined) updateData.chassisNumber = stockDto.chassisNumber;
     if (stockDto.motorNumber !== undefined) updateData.motorNumber = stockDto.motorNumber;
     if (stockDto.color !== undefined) updateData.color = stockDto.color;
