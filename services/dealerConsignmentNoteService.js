@@ -12,6 +12,21 @@ const itemInclude = [
   { model: Model, as: 'model', include: [{ model: Category, as: 'category' }] }
 ];
 
+function generateBarcodeForItem(note, item, index) {
+  // Generate a numeric 13-digit barcode
+  const noteIdPart = String(note.id || 0);
+  const modelPart = String(item.modelId || 0);
+  const indexPart = String(index + 1);
+  const timePart = String(Date.now());
+
+  const raw = `${noteIdPart}${modelPart}${indexPart}${timePart}`;
+  const digitsOnly = raw.replace(/\D/g, '');
+
+  // Pad with zeros and trim to exactly 13 digits
+  const padded = (digitsOnly + '0000000000000').slice(0, 13);
+  return padded;
+}
+
 function getNoteInclude() {
   return [
     {
@@ -46,18 +61,17 @@ class DealerConsignmentNoteService {
 
       const items = Array.isArray(dto.items) ? dto.items : [];
       if (items.length > 0) {
-        await Stock.bulkCreate(
-          items.map((item) => ({
-            noteId: note.id,
-            modelId: item.modelId,
-            itemCode: item.itemCode ?? null,
-            chassisNumber: item.chassisNumber ?? null,
-            motorNumber: item.motorNumber ?? null,
-            color: item.color ?? null,
-            quantity: item.quantity ?? 1
-          })),
-          { transaction }
-        );
+        const stocksToCreate = items.map((item, index) => ({
+          noteId: note.id,
+          modelId: item.modelId,
+          itemCode: item.itemCode ?? null,
+          chassisNumber: item.chassisNumber ?? null,
+          motorNumber: item.motorNumber ?? null,
+          color: item.color ?? null,
+          quantity: item.quantity ?? 1,
+          barcode: generateBarcodeForItem(note, item, index)
+        }));
+        await Stock.bulkCreate(stocksToCreate, { transaction });
       }
 
       await transaction.commit();
@@ -184,18 +198,17 @@ class DealerConsignmentNoteService {
 
       const items = Array.isArray(dto.items) ? dto.items : [];
       if (items.length > 0) {
-        await Stock.bulkCreate(
-          items.map((item) => ({
-            noteId: note.id,
-            modelId: item.modelId,
-            itemCode: item.itemCode ?? null,
-            chassisNumber: item.chassisNumber ?? null,
-            motorNumber: item.motorNumber ?? null,
-            color: item.color ?? null,
-            quantity: item.quantity ?? 1
-          })),
-          { transaction }
-        );
+        const stocksToCreate = items.map((item, index) => ({
+          noteId: note.id,
+          modelId: item.modelId,
+          itemCode: item.itemCode ?? null,
+          chassisNumber: item.chassisNumber ?? null,
+          motorNumber: item.motorNumber ?? null,
+          color: item.color ?? null,
+          quantity: item.quantity ?? 1,
+          barcode: generateBarcodeForItem(note, item, index)
+        }));
+        await Stock.bulkCreate(stocksToCreate, { transaction });
       }
 
       await transaction.commit();
@@ -233,6 +246,7 @@ class DealerConsignmentNoteService {
       noteId: item.noteId,
       modelId: item.modelId,
       itemCode: item.itemCode,
+      barcode: item.barcode,
       chassisNumber: item.chassisNumber,
       motorNumber: item.motorNumber,
       color: item.color,

@@ -92,6 +92,26 @@ router.get('/getByColor', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAF
 });
 
 /**
+ * Get stock by barcode
+ * GET /stock/getByBarcode?barcode=...
+ */
+router.get('/getByBarcode', authenticateToken, authorize('ADMIN', 'MANAGER', 'STAFF'), async (req, res) => {
+  try {
+    logger.info('StockController.getByBarcode() invoked');
+    const barcode = req.query.barcode;
+    const stock = await stockService.getByBarcode(barcode);
+    if (stock) {
+      res.json(responseUtil.getServiceResponse(stock));
+    } else {
+      res.status(404).json(responseUtil.getErrorServiceResponse('Stock not found', 404));
+    }
+  } catch (error) {
+    logger.error('Error retrieving stock by barcode:', error);
+    res.status(500).json(responseUtil.getErrorServiceResponse('Error retrieving stock by barcode', 500));
+  }
+});
+
+/**
  * Get stock by model
  * GET /stock/getByModel?modelId=1
  */

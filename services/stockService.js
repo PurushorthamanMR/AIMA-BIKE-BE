@@ -91,6 +91,16 @@ class StockService {
     return stocks.map((s) => this.transformToDto(s));
   }
 
+  async getByBarcode(barcode) {
+    logger.info('StockService.getByBarcode() invoked');
+    if (!barcode) return null;
+    const stock = await Stock.findOne({
+      where: { barcode },
+      include: defaultInclude
+    });
+    return this.transformToDto(stock);
+  }
+
   async getByModel(modelId) {
     logger.info('StockService.getByModel() invoked');
     const stocks = await Stock.findAll({
@@ -227,6 +237,7 @@ class StockService {
       noteId: stock.noteId,
       modelId: stock.modelId,
       itemCode: stock.itemCode,
+      barcode: stock.barcode,
       chassisNumber: stock.chassisNumber,
       motorNumber: stock.motorNumber,
       color: stock.color,

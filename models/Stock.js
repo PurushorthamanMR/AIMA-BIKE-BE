@@ -37,6 +37,11 @@ const Stock = sequelize.define('Stock', {
     allowNull: true,
     field: 'color'
   },
+  barcode: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    field: 'barcode'
+  },
   quantity: {
     type: DataTypes.INTEGER,
     defaultValue: 1,
