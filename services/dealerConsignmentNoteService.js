@@ -27,6 +27,12 @@ function generateBarcodeForItem(note, item, index) {
   return padded;
 }
 
+function resolveBarcodeForItem(note, item, index) {
+  const manual = item.barcode != null ? String(item.barcode).trim() : '';
+  if (manual) return manual;
+  return generateBarcodeForItem(note, item, index);
+}
+
 function getNoteInclude() {
   return [
     {
@@ -69,7 +75,7 @@ class DealerConsignmentNoteService {
           motorNumber: item.motorNumber ?? null,
           color: item.color ?? null,
           quantity: item.quantity ?? 1,
-          barcode: generateBarcodeForItem(note, item, index)
+          barcode: resolveBarcodeForItem(note, item, index)
         }));
         await Stock.bulkCreate(stocksToCreate, { transaction });
       }
@@ -206,7 +212,7 @@ class DealerConsignmentNoteService {
           motorNumber: item.motorNumber ?? null,
           color: item.color ?? null,
           quantity: item.quantity ?? 1,
-          barcode: generateBarcodeForItem(note, item, index)
+          barcode: resolveBarcodeForItem(note, item, index)
         }));
         await Stock.bulkCreate(stocksToCreate, { transaction });
       }
